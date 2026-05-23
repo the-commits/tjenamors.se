@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="sv" data-theme="synthwave">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TjenaMors.se</title>
+
+    <link rel="stylesheet" href="build/assets/app-70c7238d.css" />
+
+    <style>
+      .logo-text {
+        font-family: "Audiowide", sans-serif;
+        text-transform: uppercase;
+        background: linear-gradient(
+          to bottom,
+          rgba(111, 111, 255) 33%,
+          rgba(155, 155, 100, 1) 40%,
+          rgba(200, 200, 111, 1) 50%,
+          rgba(200, 200, 180, 1) 65%,
+          rgba(200, 200, 255, 1) 80%
+        );
+        -webkit-background-clip: text;
+        -moz-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        -moz-text-fill-color: transparent;
+      }
+
+      .grid-container {
+        width: 100%;
+        height: 100vh;
+        opacity: 0.7;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        pointer-events: none;
+      }
+
+      .synth-grid {
+        position: relative;
+        -webkit-backdrop-filter: blur(50%);
+        backdrop-filter: blur(50%);
+        -webkit-mask-image: linear-gradient(
+          to bottom,
+          rgba(0, 0, 0, 0),
+          hsl(var(--p)) 66%,
+          hsl(var(--p))
+        );
+        mask-image: linear-gradient(
+          to bottom,
+          rgba(0, 0, 0, 0),
+          hsl(var(--p)) 66%,
+          hsl(var(--p))
+        );
+        background:
+          linear-gradient(
+            180deg,
+            rgba(0, 0, 0, 0) 0px,
+            rgba(54, 226, 248, 0.5) 0%,
+            rgba(54, 226, 248, 0.5) 3px,
+            rgba(0, 0, 0, 0) 0px
+          ),
+          linear-gradient(
+            90deg,
+            rgba(0, 0, 0, 0) 0px,
+            rgba(54, 226, 248, 0.5) 0%,
+            rgba(54, 226, 248, 0.5) 3px,
+            rgba(0, 0, 0, 0) 0px
+          );
+        background-size:
+          2em 2em,
+          2em 2em;
+        height: 35em;
+        perspective: 1000px;
+        margin-top: 30em;
+        transform: perspective(600px) rotateX(60deg) scale(3);
+        animation: flyForward 4s linear infinite;
+      }
+
+      .synth-grid:before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 100%;
+        background: linear-gradient(rgba(0, 0, 0, 0), hsl(var(--p)));
+        pointer-events: none;
+      }
+
+      @keyframes flyForward {
+        0% {
+          background-position:
+            0% 0%,
+            0% 0%;
+        }
+        100% {
+          background-position:
+            0% 100%,
+            0% 100%;
+        }
+      }
+
+      .city {
+        position: absolute;
+        margin-top: 1em;
+        height: 30em;
+        animation: rising_city 1s ease-out forwards;
+      }
+
+      .sun {
+        background: linear-gradient(
+          to bottom,
+          rgba(255, 211, 25, 1) 0%,
+          rgba(255, 211, 25, 1) 35.5%,
+          rgba(255, 211, 25, 0) 35.6%,
+          rgba(255, 211, 25, 0) 36.6%,
+          rgba(255, 177, 27, 1) 36.5%,
+          rgba(255, 177, 27, 1) 43.5%,
+          rgba(255, 177, 27, 0) 43.6%,
+          rgba(255, 177, 27, 0) 44.6%,
+          rgba(255, 144, 31, 1) 44.7%,
+          rgba(255, 144, 31, 1) 50%,
+          rgba(255, 144, 31, 0) 50.1%,
+          rgba(255, 144, 31, 0) 51.1%,
+          rgba(255, 92, 74, 1) 51.2%,
+          rgba(255, 92, 74, 1) 58.2%,
+          rgba(255, 92, 74, 0) 58.3%,
+          rgba(255, 92, 74, 0) 59.3%,
+          rgba(255, 41, 117, 1) 59.4%,
+          rgba(255, 41, 117, 1) 66.4%,
+          rgba(255, 41, 117, 0) 66.5%,
+          rgba(255, 41, 117, 0) 67.5%,
+          rgba(249, 38, 186, 1) 67.6%,
+          rgba(249, 38, 186, 1) 74.6%,
+          rgba(249, 38, 186, 0) 74.7%,
+          rgba(249, 38, 186, 0) 75.7%,
+          rgba(242, 34, 255, 1) 75.8%,
+          rgba(242, 34, 255, 1) 82.8%,
+          rgba(242, 34, 255, 0) 82.9%,
+          rgba(242, 34, 255, 0) 83.9%,
+          rgba(242, 34, 255, 1) 84%,
+          rgba(242, 34, 255, 1) 91%,
+          rgba(242, 34, 255, 0) 91.1%,
+          rgba(242, 34, 255, 0) 92.1%,
+          rgba(191, 32, 255, 1) 92.2%,
+          rgba(191, 32, 255, 1) 96.2%,
+          rgba(191, 32, 255, 0) 96.3%,
+          rgba(191, 32, 255, 0) 96.8%,
+          rgba(140, 30, 255, 1) 97.7%
+        );
+        border-radius: 100%;
+        width: 30em;
+        height: 30em;
+        filter: drop-shadow(1em 0 0.5em #ff0d77af);
+      }
+
+      @keyframes rising_city {
+        0% {
+          height: 1em;
+          margin-top: 30em;
+        }
+        100% {
+          height: 35em;
+          margin-top: -4em;
+        }
+      }
+    </style>
+  </head>
+  <body class="font-sans antialiased overflow-hidden">
+    <div class="relative h-screen overflow-hidden pt-16">
+      <div
+        class="flex items-center flex-col absolute top-1/4 left-1/2 -translate-x-1/2 z-10"
+      >
+        <h1 class="logo-text text-8xl font-bold text-center">TJENAMORS!</h1>
+      </div>
+
+      <div class="relative mx-auto w-full h-full city overflow-hidden pt-8">
+        <div
+          class="sticky top-1/2 left-1/2 -translate-x-1/2 h-full w-full sun"
+        ></div>
+      </div>
+
+      <div class="grid-container">
+        <div class="synth-grid"></div>
+      </div>
+    </div>
+  </body>
+</html>
