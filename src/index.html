@@ -447,7 +447,7 @@
             liveSyncDuration: 20,
             liveMaxLatencyDuration: 40,
             liveDurationInfinity: true,
-            liveBackBufferLength: 600,
+            backBufferLength: 600,
             manifestLoadingMaxRetry: 4,
             levelLoadingTimeOut: 10000,
             maxFragLookUpTolerance: 2,
@@ -622,12 +622,12 @@
           const pct = dur ? Math.min(100, (pos / dur) * 100) : 0;
           progressFill.style.width = pct + '%';
           timeLabel.textContent = dur ? fmt(pos) + ' / ' + fmt(dur) : '';
-          if (mode === 'hls' && audio.seekable.length) {
+          if (mode === 'hls' && audio.seekable.length && !scrubbing) {
             const start = audio.seekable.start(0);
             const end = trueEdgeMedia();
             scrub.min = start;
             scrub.max = end;
-            if (!scrubbing) scrub.value = audio.currentTime;
+            scrub.value = audio.currentTime;
           }
           liveBtn.classList.toggle('live', isAtLive());
           return;
@@ -652,12 +652,12 @@
           fetchNow();
         }
 
-        if (mode === 'hls' && audio.seekable.length) {
+        if (mode === 'hls' && audio.seekable.length && !scrubbing) {
           const start = audio.seekable.start(0);
           const end = trueEdgeMedia();
           scrub.min = start;
           scrub.max = end;
-          if (!scrubbing) scrub.value = audio.currentTime;
+          scrub.value = audio.currentTime;
         }
         liveBtn.classList.toggle('live', isAtLive());
       }
