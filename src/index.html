@@ -333,7 +333,8 @@
     <script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
     <script>
       const API = 'https://radio.tjenamors.se/api/nowplaying/1';
-      const STREAM = 'https://radio.tjenamors.se/hls/tjenamors_radio/live.m3u8';
+      const HLS_STREAM = 'https://radio.tjenamors.se/hls/tjenamors_radio/live.m3u8';
+      const MP3_STREAM = 'https://radio.tjenamors.se/listen/tjenamors_radio/radio.mp3';
 
       const audio = document.getElementById('radio');
       const disc = document.getElementById('disc');
@@ -352,6 +353,9 @@
       let currentArt = '';
       let isOnline = false;
       let recoverTimer = null;
+      let mode = 'hls';
+      let hlsFailCount = 0;
+      let upgradeTimer = null;
 
       function normalize(np) {
         if (!np || !np.song) return null;
@@ -393,21 +397,88 @@
         }
       }
 
+      function teardownHls() {
+        if (hls) {
+          try {
+            hls.destroy();
+          } catch (_) {}
+          hls = null;
+        }
+        audio.removeEventListener('error', onAudioError);
+        audio.removeAttribute('src');
+        audio.load();
+      }
+
       function setupHls() {
+        mode = 'hls';
         if (audio.canPlayType('application/vnd.apple.mpegurl')) {
-          audio.src = STREAM;
+          audio.src = HLS_STREAM;
           audio.addEventListener('loadedmetadata', onReady);
-          audio.addEventListener('error', scheduleRecover);
+          audio.addEventListener('error', onAudioError);
         } else if (window.Hls && Hls.isSupported()) {
           hls = new Hls({ lowLatencyMode: true, enableWorker: true });
-          hls.loadSource(STREAM);
+          hls.loadSource(HLS_STREAM);
           hls.attachMedia(audio);
           hls.on(Hls.Events.MANIFEST_PARSED, onReady);
           hls.on(Hls.Events.ERROR, (_e, data) => {
-            if (data.fatal) scheduleRecover();
+            if (data.fatal) onHlsFatal(data);
           });
         } else {
-          songText.textContent = 'HLS not supported';
+          switchToMp3();
+        }
+      }
+
+      function onHlsFatal(data) {
+        hlsFailCount++;
+        if (hlsFailCount <= 2 && data.type !== Hls.ErrorTypes.NETWORK_ERROR) {
+          scheduleRecover();
+        } else {
+          switchToMp3();
+        }
+      }
+
+      function onAudioError() {
+        if (mode === 'hls') switchToMp3();
+      }
+
+      function switchToMp3() {
+        mode = 'mp3';
+        hlsFailCount = 0;
+        stopUpgradeProbe();
+        teardownHls();
+        audio.src = MP3_STREAM;
+        scrub.disabled = true;
+        liveWall = Date.now() / 1000;
+        audio.play().catch((e) => console.error(e));
+        playPause.disabled = false;
+        startUpgradeProbe();
+      }
+
+      function switchToHls() {
+        stopUpgradeProbe();
+        const wasPlaying = !audio.paused;
+        teardownHls();
+        setupHls();
+        if (wasPlaying) goLive();
+      }
+
+      async function probeHls() {
+        try {
+          const res = await fetch(HLS_STREAM, { method: 'HEAD' });
+          if (res.ok) switchToHls();
+        } catch (_) {}
+      }
+
+      function startUpgradeProbe() {
+        stopUpgradeProbe();
+        upgradeTimer = setInterval(probeHls, 30000);
+        setTimeout(probeHls, 5000);
+      }
+
+      function stopUpgradeProbe() {
+        if (upgradeTimer) {
+          clearInterval(upgradeTimer);
+          upgradeTimer = null;
         }
       }
 
@@ -415,12 +486,7 @@
         if (recoverTimer) return;
         recoverTimer = setTimeout(() => {
           recoverTimer = null;
-          if (hls) {
-            try {
-              hls.destroy();
-            } catch (_) {}
-            hls = null;
-          }
+          teardownHls();
           setupHls();
           goLive();
         }, 3000);
@@ -429,15 +495,18 @@
       function onReady() {
         playPause.disabled = false;
         scrub.disabled = false;
+        hlsFailCount = 0;
       }
 
       function liveEdgeMedia() {
+        if (mode === 'mp3') return audio.currentTime;
         if (hls && hls.liveSyncPosition) return hls.liveSyncPosition;
         if (audio.seekable.length) return audio.seekable.end(audio.seekable.length - 1);
         return 0;
       }
 
       function mediaToWall(mediaTime) {
+        if (mode === 'mp3') return Date.now() / 1000;
         return liveWall - (liveEdgeMedia() - mediaTime);
       }
 
@@ -446,6 +515,7 @@
       }
 
       function isAtLive() {
+        if (mode === 'mp3') return true;
         return liveEdgeMedia() - audio.currentTime < 3;
       }
 
@@ -496,7 +566,7 @@
           timeLabel.textContent = '';
         }
 
-        if (audio.seekable.length) {
+        if (mode === 'hls' && audio.seekable.length) {
           const start = audio.seekable.start(0);
           const end = liveEdgeMedia();
           scrub.min = start;
@@ -518,6 +588,11 @@
       liveBtn.addEventListener('click', goLive);
 
       function goLive() {
+        if (mode === 'mp3') {
+          liveWall = Date.now() / 1000;
+          audio.play().catch(() => {});
+          return;
+        }
         const live = liveEdgeMedia();
         if (live) audio.currentTime = live;
         liveWall = Date.now() / 1000;
@@ -525,6 +600,7 @@
       }
 
       scrub.addEventListener('input', () => {
+        if (mode !== 'hls') return;
         scrubbing = true;
         audio.currentTime = parseFloat(scrub.value);
       });
@@ -540,7 +616,7 @@
         playPause.textContent = '▶';
       });
       audio.addEventListener('waiting', () => {
-        if (!audio.paused) scheduleRecover();
+        if (!audio.paused && mode === 'hls') scheduleRecover();
       });
 
       setInterval(() => {
