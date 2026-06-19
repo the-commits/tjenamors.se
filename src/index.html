@@ -584,6 +584,7 @@
             if (unmuted) return;
             unmuted = true;
             audio.muted = false;
+            audio.play().catch(() => {});
             document.removeEventListener('click', unmute);
             document.removeEventListener('touchstart', unmute);
           };
