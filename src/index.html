@@ -33,7 +33,7 @@
         bottom: 0;
         left: 0;
         pointer-events: none;
-        transition: opacity 1.5s ease;
+        transition: opacity 1.5s ease, transform 1.5s ease;
       }
 
       .synth-grid {
@@ -828,6 +828,7 @@
       const gridContainer = document.querySelector('.grid-container');
       setTimeout(() => {
         grid.style.animationPlayState = 'paused';
+        gridContainer.style.transform = 'translateY(100vh)';
         gridContainer.style.opacity = '0';
       }, 5000);
 
