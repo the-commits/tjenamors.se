@@ -357,6 +357,7 @@
       let hls = null;
       let liveWall = Date.now() / 1000;
       let scrubbing = false;
+      let userSeeked = false;
       let currentArt = '';
       let isOnline = false;
       let recoverTimer = null;
@@ -437,6 +438,7 @@
             liveSyncDuration: 20,
             liveMaxLatencyDuration: 40,
             liveDurationInfinity: true,
+            liveBackBufferLength: 600,
             manifestLoadingMaxRetry: 4,
             levelLoadingTimeOut: 10000,
             maxFragLookUpTolerance: 2,
@@ -511,9 +513,18 @@
         recoverTimer = setTimeout(() => {
           recoverTimer = null;
           if (!audio.paused && audio.readyState < 3) {
+            const seekTarget = userSeeked ? audio.currentTime : null;
             teardownHls();
             setupHls();
-            goLive();
+            if (seekTarget != null) {
+              hls.once(Hls.Events.MANIFEST_PARSED, () => {
+                hls.startPosition = seekTarget;
+                audio.currentTime = seekTarget;
+                audio.play().catch(() => {});
+              });
+            } else {
+              goLive();
+            }
           }
         }, 15000);
       }
@@ -642,7 +653,7 @@
 
       playPause.addEventListener('click', () => {
         if (audio.paused) {
-          if (isAtLive() || !audio.seekable.length) goLive();
+          if (!userSeeked && (isAtLive() || !audio.seekable.length)) goLive();
           audio.play().catch((e) => console.error(e));
         } else {
           audio.pause();
@@ -652,6 +663,7 @@
       liveBtn.addEventListener('click', goLive);
 
       function goLive() {
+        userSeeked = false;
         if (mode === 'mp3') {
           liveWall = Date.now() / 1000;
           audio.play().catch(() => {});
@@ -670,6 +682,7 @@
       });
       scrub.addEventListener('change', () => {
         scrubbing = false;
+        userSeeked = !isAtLive();
       });
 
       audio.addEventListener('timeupdate', () => {
@@ -686,7 +699,7 @@
         render();
       });
       audio.addEventListener('waiting', () => {
-        if (!audio.paused && mode === 'hls') scheduleRecover();
+        if (!audio.paused && mode === 'hls' && !scrubbing) scheduleRecover();
       });
 
       setInterval(() => {
