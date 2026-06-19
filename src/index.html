@@ -510,10 +510,12 @@
         if (recoverTimer) return;
         recoverTimer = setTimeout(() => {
           recoverTimer = null;
-          teardownHls();
-          setupHls();
-          goLive();
-        }, 3000);
+          if (!audio.paused && audio.readyState < 3) {
+            teardownHls();
+            setupHls();
+            goLive();
+          }
+        }, 15000);
       }
 
       function onReady() {
@@ -643,7 +645,7 @@
           audio.play().catch(() => {});
           return;
         }
-        const live = liveEdgeMedia();
+        const live = hls && hls.liveSyncPosition ? hls.liveSyncPosition : liveEdgeMedia();
         if (live) audio.currentTime = live;
         liveWall = Date.now() / 1000;
         audio.play().catch(() => {});
