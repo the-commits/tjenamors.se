@@ -603,7 +603,7 @@
           timeLabel.textContent = dur ? fmt(pos) + ' / ' + fmt(dur) : '';
           if (mode === 'hls' && audio.seekable.length) {
             const start = audio.seekable.start(0);
-            const end = liveEdgeMedia();
+            const end = trueEdgeMedia();
             scrub.min = start;
             scrub.max = end;
             if (!scrubbing) scrub.value = audio.currentTime;
@@ -690,7 +690,7 @@
       });
 
       setInterval(() => {
-        if (isAtLive()) liveWall = Date.now() / 1000;
+        liveWall = Date.now() / 1000;
         render();
       }, 1000);
 
