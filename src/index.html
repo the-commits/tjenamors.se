@@ -353,7 +353,7 @@
       </div>
     </div>
 
-    <audio id="radio" preload="metadata" autoplay playsinline></audio>
+    <audio id="radio" preload="metadata" autoplay playsinline muted></audio>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
     <script>
       const API = 'https://radio.tjenamors.se/api/nowplaying/1';
@@ -556,16 +556,21 @@
         }, 15000);
       }
 
+      let unmuted = false;
       function attemptPlay() {
-        audio.play().catch(() => {
-          const handler = () => {
-            audio.play().catch(() => {});
-            document.removeEventListener('click', handler);
-            document.removeEventListener('touchstart', handler);
+        if (!unmuted) audio.muted = true;
+        audio.play().catch(() => {});
+        if (!unmuted) {
+          const unmute = () => {
+            if (unmuted) return;
+            unmuted = true;
+            audio.muted = false;
+            document.removeEventListener('click', unmute);
+            document.removeEventListener('touchstart', unmute);
           };
-          document.addEventListener('click', handler);
-          document.addEventListener('touchstart', handler);
-        });
+          document.addEventListener('click', unmute);
+          document.addEventListener('touchstart', unmute);
+        }
       }
 
       function onReady() {
