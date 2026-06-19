@@ -1,5 +1,20 @@
 # AGENTS.md
 
+## ⚠️ CRITICAL — this repo is PUBLIC
+
+This repository is **public**. NEVER commit, paste, or hard-code secrets of any
+kind — API tokens, passwords, private keys, `.env` files, connection strings,
+or anything that should stay private. Before committing, check `git diff` and
+`git status` for anything that looks like a secret. When in doubt, do not
+commit it.
+
+Manage variables and secrets with the **GitHub CLI (`gh`)**, never in the repo:
+- Repo-level: `gh variable set <NAME> --body <value>` / `gh secret set <NAME> --body <value>`
+- Environment-level: `gh variable set <NAME> --env <env> --body <value>` / `gh secret set <NAME> --env <env> --body <value>`
+
+Use Cloudflare Pages **Variables and secrets** (dashboard) for any build/runtime
+secrets the Pages deploy needs — never put them in the repo.
+
 ## What this is
 
 `tjenamors.se` is a single-page synthwave-themed static site. Source files live
