@@ -524,16 +524,21 @@
         hlsFailCount = 0;
       }
 
-      function liveEdgeMedia() {
+      function trueEdgeMedia() {
         if (mode === 'mp3') return audio.currentTime;
-        if (hls && hls.liveSyncPosition) return hls.liveSyncPosition;
         if (audio.seekable.length) return audio.seekable.end(audio.seekable.length - 1);
         return 0;
       }
 
+      function syncPosition() {
+        if (mode === 'mp3') return audio.currentTime;
+        if (hls && hls.liveSyncPosition) return hls.liveSyncPosition;
+        return trueEdgeMedia();
+      }
+
       function mediaToWall(mediaTime) {
         if (mode === 'mp3') return Date.now() / 1000;
-        return liveWall - (liveEdgeMedia() - mediaTime);
+        return liveWall - (trueEdgeMedia() - mediaTime);
       }
 
       function findSongAt(wc) {
@@ -548,7 +553,8 @@
 
       function isAtLive() {
         if (mode === 'mp3') return true;
-        return liveEdgeMedia() - audio.currentTime < 3;
+        const target = syncPosition();
+        return Math.abs(target - audio.currentTime) < 5;
       }
 
       function setArt(url) {
@@ -626,7 +632,7 @@
 
         if (mode === 'hls' && audio.seekable.length) {
           const start = audio.seekable.start(0);
-          const end = liveEdgeMedia();
+          const end = trueEdgeMedia();
           scrub.min = start;
           scrub.max = end;
           if (!scrubbing) scrub.value = audio.currentTime;
@@ -651,7 +657,7 @@
           audio.play().catch(() => {});
           return;
         }
-        const live = hls && hls.liveSyncPosition ? hls.liveSyncPosition : liveEdgeMedia();
+        const live = syncPosition();
         if (live) audio.currentTime = live;
         liveWall = Date.now() / 1000;
         audio.play().catch(() => {});
