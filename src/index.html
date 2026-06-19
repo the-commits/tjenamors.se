@@ -356,6 +356,8 @@
       let mode = 'hls';
       let hlsFailCount = 0;
       let upgradeTimer = null;
+      let audioPlaying = false;
+      let nextUp = null;
 
       function normalize(np) {
         if (!np || !np.song) return null;
@@ -375,6 +377,7 @@
           const res = await fetch(API);
           const data = await res.json();
           isOnline = !!data.is_online;
+          nextUp = normalize(data.playing_next);
           const songs = [];
           (data.song_history || []).slice().reverse().forEach((h) => {
             const s = normalize(h);
@@ -419,13 +422,14 @@
           hls = new Hls({
             lowLatencyMode: false,
             enableWorker: true,
-            maxBufferLength: 30,
-            maxMaxBufferLength: 60,
-            liveSyncDuration: 6,
-            liveMaxLatencyDuration: 18,
+            maxBufferLength: 40,
+            maxMaxBufferLength: 120,
+            liveSyncDuration: 20,
+            liveMaxLatencyDuration: 40,
             liveDurationInfinity: true,
             manifestLoadingMaxRetry: 4,
             levelLoadingTimeOut: 10000,
+            maxFragLookUpTolerance: 2,
           });
           hls.loadSource(HLS_STREAM);
           hls.attachMedia(audio);
@@ -549,7 +553,8 @@
       }
 
       function render() {
-        if (!isOnline) {
+        const live = isOnline || audioPlaying;
+        if (!live) {
           setArt(null);
           songText.textContent = 'Ingen sändning';
           artistEl.textContent = '';
@@ -568,6 +573,12 @@
           const pct = song.duration ? Math.min(100, (pos / song.duration) * 100) : 0;
           progressFill.style.width = pct + '%';
           timeLabel.textContent = fmt(pos) + ' / ' + fmt(song.duration);
+        } else if (nextUp) {
+          setArt(nextUp.art);
+          songText.textContent = nextUp.title || nextUp.text;
+          artistEl.textContent = nextUp.artist || '';
+          progressFill.style.width = '0%';
+          timeLabel.textContent = 'Kommer snart…';
         } else {
           setArt(null);
           songText.textContent = 'TjenaMors Radio';
@@ -618,12 +629,18 @@
         scrubbing = false;
       });
 
-      audio.addEventListener('timeupdate', render);
+      audio.addEventListener('timeupdate', () => {
+        audioPlaying = true;
+        render();
+      });
       audio.addEventListener('play', () => {
+        audioPlaying = true;
         playPause.textContent = '❚❚';
       });
       audio.addEventListener('pause', () => {
+        audioPlaying = false;
         playPause.textContent = '▶';
+        render();
       });
       audio.addEventListener('waiting', () => {
         if (!audio.paused && mode === 'hls') scheduleRecover();
