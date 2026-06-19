@@ -2,56 +2,65 @@
 
 ## ⚠️ CRITICAL — this repo is PUBLIC
 
-NEVER commit, paste, or hard-code secrets — API tokens, passwords, private
-keys, `.env` files, connection strings. Before committing, check `git diff` and
-`git status` for anything that looks like a secret. When in doubt, do not
-commit it.
+NEVER commit secrets — API tokens, passwords, private keys, `.env` files,
+connection strings. Check `git diff` and `git status` before committing.
 
-Manage variables and secrets with the **GitHub CLI (`gh`)**, never in the repo:
-- Repo-level: `gh variable set <NAME> --body <value>` / `gh secret set <NAME> --body <value>`
-- Environment-level: `gh variable set <NAME> --env <env> --body <value>` / `gh secret set <NAME> --env <env> --body <value>`
-
-Use Cloudflare Pages **Variables and secrets** (dashboard) for any build/runtime
-secrets the Pages deploy needs — never put them in the repo.
+Secrets go in Cloudflare Pages dashboard Variables and secrets; never in the
+repo. Use `gh secret set` / `gh variable set` if you must script it.
 
 ## What this is
 
-`tjenamors.se` is a single-page synthwave-themed static site. Source files live
-in `src/`; `scripts/build.mjs` copies `src/` → `dist/`. Cloudflare Pages
-(project `tjenamors`, production branch `main`) runs `bun run build` on push and
-serves `dist/` (framework preset: None).
+`tjenamors.se` is a single-page synthwave-themed radio station website.
+Everything (HTML, CSS, JS) is inline in `src/index.html`. `scripts/build.mjs`
+copies `src/` → `dist/`. Cloudflare Pages (project `tjenamors`, production
+`main`, framework preset None) builds and serves `dist/`.
 
 ## Developer commands
 
 | Goal | Command |
 |------|---------|
-| Build (src/ → dist/) | `bun run build` |
-| Clean rebuild | `rm -rf dist && bun run build` |
+| Build | `node scripts/build.mjs` |
+| Clean rebuild | `rm -rf dist && node scripts/build.mjs` |
+| Radio API mgmt | `node scripts/azuracast.mjs <command>` |
 
-No tests, no linter, no dev server. The build script uses only `node:fs` APIs,
-so it runs under either `bun` or `node`.
+## E2E testing (puppeteer)
 
-## Editing styles — where to change things
+E2E tests live in `tests/` and use Puppeteer (install via `npm install`).
+Run with: `node tests/<name>.mjs`
 
-Edit **`src/index.html`** — the synthwave visuals (logo gradient, perspective
-grid, sun, city animation) live as inline `<style>` there. Do **not** edit
-`dist/`; it is generated and gitignored.
+Test flow (TDD):
+1. Write a test that opens a page and asserts behaviour
+2. Run `node tests/<name>.mjs`
+3. Fix the code to make it pass
 
-`src/build/assets/app-70c7238d.css` is the minified Tailwind v3.3.3 + DaisyUI
-base and the only stylesheet `src/index.html` loads. The other two files in
-`src/build/assets/` (`SynthwaveLogo-*.css`, `TjenaMors-*.css`) are orphaned
-Vite/Vue component artifacts — not referenced by `index.html` (their styles were
-inlined). All `src/build/assets/*.css` carry `[data-v-...]` scoped selectors and
-content hashes from a Vite/Vue build, so hand-editing them is fragile.
+## Where to edit
 
-## robots.txt
+- **`src/index.html`** — all visuals, layout, JS logic, and inline `<style>`.
+  Do **not** edit `dist/` (generated, gitignored).
+- `src/build/assets/app-70c7238d.css` is minified Tailwind v3.3.3 + DaisyUI.
+  Has `[data-v-...]` scoped selectors — hand-editing is fragile.
+- Other `src/build/assets/*.css` are orphaned Vite/Vue artifacts, not loaded.
+- `src/robots.txt` has a Cloudflare-managed block between `BEGIN` / `END
+  Cloudflare Managed content` markers; edits outside them are safe.
 
-`src/robots.txt` has a Cloudflare-managed block (between the `BEGIN` / `END
-Cloudflare Managed content` markers) that may be overwritten by Cloudflare;
-edits outside the markers are safe.
+## Radio streaming
 
-## Planned changes (not yet implemented)
+The site uses HLS.js (primary) with MP3 fallback for a live stream from
+AzuraCast. Key endpoints (inlined in `src/index.html`):
+- Now Playing API: `https://radio.tjenamors.se/api/nowplaying/1`
+- HLS stream: `https://radio.tjenamors.se/hls/tjenamors_radio/live.m3u8`
+- MP3 stream: `https://radio.tjenamors.se/listen/tjenamors_radio/radio.mp3`
 
-- The Vue/Vite + Tailwind + DaisyUI **source project will be moved into this
-  repo**. Once present, `src/build/assets/` becomes generated output and the
-  copy-based `scripts/build.mjs` is replaced by the real Vite build.
+Autoplay starts muted (browser policy); first click unmutes. Position is saved
+every 5s in a `tj_pos` cookie and restored on next visit (1-hour window).
+
+## Grid animation (WCAG)
+
+The synthwave grid (`#grid-container > .synth-grid`) runs `flyForward` at 4s,
+then slides down & fades out at 5s. Respects `prefers-reduced-motion: reduce`.
+
+## MCP
+
+`opencode.jsonc` configures the `chrome-devtools-mcp` MCP server (installed on
+project level so all contributors get it). Tools available after restart:
+navigate, screenshot, console inspection, script evaluation, etc.
