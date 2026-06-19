@@ -33,7 +33,18 @@
         bottom: 0;
         left: 0;
         pointer-events: none;
-        transition: opacity 1.5s ease, transform 1.5s ease;
+        transition: opacity 1.5s ease;
+        animation: slideDown 4.6s ease-in 0.4s forwards;
+      }
+
+      @keyframes slideDown {
+        to { transform: translateY(100vh); }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .grid-container {
+          animation: none;
+        }
       }
 
       .synth-grid {
@@ -828,7 +839,6 @@
       const gridContainer = document.querySelector('.grid-container');
       setTimeout(() => {
         grid.style.animationPlayState = 'paused';
-        gridContainer.style.transform = 'translateY(100vh)';
         gridContainer.style.opacity = '0';
       }, 5000);
 
