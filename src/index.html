@@ -368,6 +368,7 @@
       let nextUp = null;
       let localStart = 0;
       let localSongId = '';
+      let lastFetch = 0;
 
       function normalize(np) {
         if (!np || !np.song) return null;
@@ -384,6 +385,7 @@
       }
 
       async function pollNowPlaying() {
+        lastFetch = Date.now();
         try {
           const res = await fetch(API);
           const data = await res.json();
@@ -409,6 +411,13 @@
         } catch (e) {
           console.error('nowplaying fetch failed', e);
         }
+      }
+
+      function fetchNow() {
+        const now = Date.now();
+        if (now - lastFetch < 2000) return;
+        lastFetch = now;
+        pollNowPlaying();
       }
 
       function teardownHls() {
@@ -596,6 +605,7 @@
           progressFill.style.width = '0%';
           timeLabel.textContent = '';
           liveBtn.classList.remove('live');
+          fetchNow();
           return;
         }
 
@@ -639,6 +649,7 @@
           artistEl.textContent = 'Vi spelar bra skit!';
           progressFill.style.width = '0%';
           timeLabel.textContent = '';
+          fetchNow();
         }
 
         if (mode === 'hls' && audio.seekable.length) {
