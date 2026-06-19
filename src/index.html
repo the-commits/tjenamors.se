@@ -365,6 +365,8 @@
       let upgradeTimer = null;
       let audioPlaying = false;
       let nextUp = null;
+      let localStart = 0;
+      let localSongId = '';
 
       function normalize(np) {
         if (!np || !np.song) return null;
@@ -376,6 +378,7 @@
           title: np.song.title || '',
           artist: np.song.artist || '',
           text: np.song.text || '',
+          id: np.song.id || '',
         };
       }
 
@@ -570,6 +573,31 @@
           liveBtn.classList.remove('live');
           return;
         }
+
+        if (!isOnline && nextUp) {
+          if (nextUp.id !== localSongId) {
+            localSongId = nextUp.id;
+            localStart = Date.now() / 1000;
+          }
+          setArt(nextUp.art);
+          songText.textContent = nextUp.title || nextUp.text;
+          artistEl.textContent = nextUp.artist || '';
+          const pos = Math.max(0, Date.now() / 1000 - localStart);
+          const dur = nextUp.duration || 0;
+          const pct = dur ? Math.min(100, (pos / dur) * 100) : 0;
+          progressFill.style.width = pct + '%';
+          timeLabel.textContent = dur ? fmt(pos) + ' / ' + fmt(dur) : '';
+          if (mode === 'hls' && audio.seekable.length) {
+            const start = audio.seekable.start(0);
+            const end = liveEdgeMedia();
+            scrub.min = start;
+            scrub.max = end;
+            if (!scrubbing) scrub.value = audio.currentTime;
+          }
+          liveBtn.classList.toggle('live', isAtLive());
+          return;
+        }
+
         const wc = mediaToWall(audio.currentTime);
         const song = findSongAt(wc);
         if (song) {
@@ -580,12 +608,6 @@
           const pct = song.duration ? Math.min(100, (pos / song.duration) * 100) : 0;
           progressFill.style.width = pct + '%';
           timeLabel.textContent = fmt(pos) + ' / ' + fmt(song.duration);
-        } else if (nextUp) {
-          setArt(nextUp.art);
-          songText.textContent = nextUp.title || nextUp.text;
-          artistEl.textContent = nextUp.artist || '';
-          progressFill.style.width = '0%';
-          timeLabel.textContent = 'Kommer snart…';
         } else {
           setArt(null);
           songText.textContent = 'TjenaMors Radio';
@@ -655,6 +677,7 @@
 
       setInterval(() => {
         if (isAtLive()) liveWall = Date.now() / 1000;
+        if (!isOnline && audioPlaying) render();
       }, 1000);
 
       const cityEl = document.querySelector('.city');
