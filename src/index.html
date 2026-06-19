@@ -76,6 +76,12 @@
         animation: flyForward 4s linear infinite;
       }
 
+      @media (prefers-reduced-motion: reduce) {
+        .synth-grid {
+          animation: none;
+        }
+      }
+
       .synth-grid:before {
         content: "";
         position: absolute;
@@ -187,6 +193,10 @@
       }
       .player > * {
         pointer-events: auto;
+      }
+
+      .player-content {
+        margin-top: 2.5em;
       }
 
       #disc {
@@ -318,17 +328,19 @@
 
       <div class="player">
         <div id="disc" class="sun"></div>
-        <div class="info">
-          <div id="song-text">TjenaMors Radio</div>
-          <span id="artist">Vi spelar bra skit!</span>
-          <div class="progress"><div id="progress-fill"></div></div>
-          <div id="time"></div>
+        <div class="player-content">
+          <div class="info">
+            <div id="song-text">TjenaMors Radio</div>
+            <span id="artist">Vi spelar bra skit!</span>
+            <div class="progress"><div id="progress-fill"></div></div>
+            <div id="time"></div>
+          </div>
+          <div class="controls">
+            <button id="play-pause" class="btn" disabled>▶</button>
+            <button id="live-btn" class="btn live">LIVE</button>
+          </div>
+          <input id="scrub" type="range" disabled />
         </div>
-        <div class="controls">
-          <button id="play-pause" class="btn" disabled>▶</button>
-          <button id="live-btn" class="btn live">LIVE</button>
-        </div>
-        <input id="scrub" type="range" disabled />
       </div>
 
       <div class="grid-container">
@@ -543,6 +555,13 @@
         playPause.disabled = false;
         scrub.disabled = false;
         hlsFailCount = 0;
+        const p = loadPosition();
+        if (p && p.t && Date.now() - p.ts < 3600000 && audio.seekable.length && p.t >= audio.seekable.start(0) && p.t <= audio.seekable.end(audio.seekable.length - 1)) {
+          audio.currentTime = p.t;
+          userSeeked = true;
+          lastUserPos = p.t;
+        }
+        audio.play().catch(() => {});
       }
 
       function trueEdgeMedia() {
@@ -588,6 +607,12 @@
           disc.style.backgroundImage = '';
           disc.classList.remove('has-art');
         }
+      }
+
+      function loadPosition() {
+        const m = document.cookie.match(/(?:^|; )tj_pos=([^;]*)/);
+        if (!m) return null;
+        try { return JSON.parse(decodeURIComponent(m[1])); } catch { return null; }
       }
 
       function fmt(s) {
@@ -727,9 +752,18 @@
         if (!audio.paused && mode === 'hls' && !scrubbing) scheduleRecover();
       });
 
+      let saveTimer = 0;
       setInterval(() => {
         liveWall = Date.now() / 1000;
         render();
+        const now = Date.now();
+        if (now - saveTimer >= 5000) {
+          saveTimer = now;
+          const t = audio.currentTime;
+          if (t && !isNaN(t)) {
+            document.cookie = 'tj_pos=' + encodeURIComponent(JSON.stringify({ t: Math.round(t * 10) / 10, ts: now })) + '; path=/; max-age=86400';
+          }
+        }
       }, 1000);
 
       const cityEl = document.querySelector('.city');
@@ -766,6 +800,16 @@
       setInterval(pollNowPlaying, 5000);
       setupHls();
       render();
+
+      const grid = document.querySelector('.synth-grid');
+      setTimeout(() => { grid.style.animationPlayState = 'paused'; }, 5000);
+
+      window.addEventListener('beforeunload', () => {
+        const t = audio.currentTime;
+        if (t && !isNaN(t)) {
+          document.cookie = 'tj_pos=' + encodeURIComponent(JSON.stringify({ t: Math.round(t * 10) / 10, ts: Date.now() })) + '; path=/; max-age=86400';
+        }
+      });
     </script>
   </body>
 </html>
