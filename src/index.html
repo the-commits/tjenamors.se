@@ -358,6 +358,8 @@
       let liveWall = Date.now() / 1000;
       let scrubbing = false;
       let userSeeked = false;
+      let lastUserPos = 0;
+      let suppressSeekGuard = false;
       let currentArt = '';
       let isOnline = false;
       let recoverTimer = null;
@@ -445,7 +447,6 @@
             maxBufferLength: 40,
             maxMaxBufferLength: 120,
             liveSyncDuration: 20,
-            liveMaxLatencyDuration: 40,
             liveDurationInfinity: true,
             backBufferLength: 600,
             manifestLoadingMaxRetry: 4,
@@ -690,6 +691,7 @@
         if (mode !== 'hls') return;
         scrubbing = true;
         audio.currentTime = parseFloat(scrub.value);
+        lastUserPos = parseFloat(scrub.value);
       });
       scrub.addEventListener('change', () => {
         scrubbing = false;
@@ -698,7 +700,19 @@
 
       audio.addEventListener('timeupdate', () => {
         audioPlaying = true;
+        if (userSeeked && !isAtLive()) lastUserPos = audio.currentTime;
         render();
+      });
+      audio.addEventListener('seeking', () => {
+        if (suppressSeekGuard || scrubbing) return;
+        if (userSeeked) {
+          const live = syncPosition();
+          if (live && Math.abs(audio.currentTime - live) < 5) {
+            suppressSeekGuard = true;
+            audio.currentTime = lastUserPos;
+            setTimeout(() => { suppressSeekGuard = false; }, 200);
+          }
+        }
       });
       audio.addEventListener('play', () => {
         audioPlaying = true;
