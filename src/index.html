@@ -177,6 +177,13 @@
         gap: 1.25em;
         pointer-events: none;
         width: min(92vw, 40em);
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.9s ease;
+      }
+      .player.visible {
+        opacity: 1;
+        visibility: visible;
       }
       .player > * {
         pointer-events: auto;
@@ -649,6 +656,36 @@
       setInterval(() => {
         if (isAtLive()) liveWall = Date.now() / 1000;
       }, 1000);
+
+      const cityEl = document.querySelector('.city');
+      const sunEl = document.querySelector('.city > .sun');
+      const playerEl = document.querySelector('.player');
+
+      function alignPlayerToSun() {
+        if (!sunEl || !playerEl) return;
+        const s = sunEl.getBoundingClientRect();
+        const cx = s.left + s.width / 2;
+        const cy = s.top + s.height / 2;
+        const cont = playerEl.offsetParent;
+        const cRect = cont.getBoundingClientRect();
+        const discH = disc.getBoundingClientRect().height;
+        playerEl.style.left = cx - cRect.left + 'px';
+        playerEl.style.top = cy - cRect.top + 'px';
+        playerEl.style.transform = `translate(-50%, ${-discH / 2}px)`;
+      }
+
+      function revealPlayer() {
+        alignPlayerToSun();
+        playerEl.classList.add('visible');
+      }
+
+      cityEl.addEventListener('animationend', (e) => {
+        if (e.animationName === 'rising_city') revealPlayer();
+      });
+      setTimeout(revealPlayer, 1200);
+      window.addEventListener('resize', () => {
+        if (playerEl.classList.contains('visible')) alignPlayerToSun();
+      });
 
       pollNowPlaying();
       setInterval(pollNowPlaying, 10000);
