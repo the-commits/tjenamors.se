@@ -23,15 +23,16 @@ copies `src/` → `dist/`. Cloudflare Pages (project `tjenamors`, production
 | Clean rebuild | `rm -rf dist && node scripts/build.mjs` |
 | Radio API mgmt | `node scripts/azuracast.mjs <command>` |
 
+## Workflow: trunk-based + TDD E2E
+
+- **Branch**: short-lived feature branches off `main`, merged via PR (1 review required)
+- **Main is protected** — direct pushes blocked, linear history required
+- **TDD cycle**: write a Puppeteer test → run it (fails) → fix code → test passes → PR
+
 ## E2E testing (puppeteer)
 
 E2E tests live in `tests/` and use Puppeteer (install via `npm install`).
 Run with: `node tests/<name>.mjs`
-
-Test flow (TDD):
-1. Write a test that opens a page and asserts behaviour
-2. Run `node tests/<name>.mjs`
-3. Fix the code to make it pass
 
 ## Where to edit
 
