@@ -455,8 +455,10 @@
             if (s) songs.push(s);
           });
           const now = normalize(data.now_playing);
+          if (now && (!nowPlayingSong || now.id !== nowPlayingSong.id || now.elapsed !== nowPlayingSong.elapsed)) {
+            elapsedCapturedAt = Date.now();
+          }
           nowPlayingSong = now;
-          elapsedCapturedAt = Date.now();
           if (now) songs.push(now);
           const next = normalize(data.playing_next);
           if (next) songs.push(next);
