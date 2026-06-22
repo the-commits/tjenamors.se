@@ -170,6 +170,7 @@
         width: min(30em, 80vw);
         height: min(30em, 80vw);
         filter: drop-shadow(1em 0 0.5em #ff0d77af);
+        transition: opacity 2s ease;
       }
 
       @keyframes rising_city {
@@ -796,10 +797,12 @@
       audio.addEventListener('play', () => {
         audioPlaying = true;
         playPause.textContent = '❚❚';
+        if (sunEl) sunEl.style.opacity = '0.1';
       });
       audio.addEventListener('pause', () => {
         audioPlaying = false;
         playPause.textContent = '▶';
+        if (sunEl) sunEl.style.opacity = '1';
         render();
       });
       audio.addEventListener('waiting', () => {
