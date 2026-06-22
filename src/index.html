@@ -585,7 +585,7 @@
             maxBufferLength: 40,
             maxMaxBufferLength: 120,
             liveSyncDuration: 20,
-            liveDurationInfinity: true,
+            liveDurationInfinity: false,
             backBufferLength: 600,
             manifestLoadingMaxRetry: 4,
             levelLoadingTimeOut: 10000,
@@ -861,7 +861,7 @@
       }
 
       scrub.addEventListener('input', () => {
-        if (!audio.seekable.length) return;
+        if (mode !== 'hls') return;
         scrubbing = true;
         audio.currentTime = parseFloat(scrub.value);
         lastUserPos = parseFloat(scrub.value);
@@ -879,7 +879,9 @@
       });
       skipFwd.addEventListener('click', () => {
         const t = (audio.currentTime || 0) + 15;
-        if (audio.duration && isFinite(audio.duration)) {
+        if (audio.seekable.length) {
+          audio.currentTime = Math.min(audio.seekable.end(audio.seekable.length - 1), t);
+        } else if (audio.duration && isFinite(audio.duration)) {
           audio.currentTime = Math.min(audio.duration, t);
         } else {
           audio.currentTime = t;
