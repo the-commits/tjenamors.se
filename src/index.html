@@ -283,48 +283,6 @@
         border-radius: 999px;
         transition: width 0.3s linear;
       }
-      #scrub {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 8px;
-        margin: 0;
-        -webkit-appearance: none;
-        appearance: none;
-        background: transparent;
-        cursor: pointer;
-        z-index: 1;
-      }
-      #scrub::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 16px;
-        height: 16px;
-        border-radius: 50%;
-        background: #ff2e97;
-        border: 2px solid #ffe6fb;
-        cursor: pointer;
-        box-shadow: 0 0 10px rgba(255, 46, 151, 0.6);
-        transition: transform 0.15s ease, box-shadow 0.15s ease;
-      }
-      #scrub::-webkit-slider-thumb:hover {
-        transform: scale(1.2);
-        box-shadow: 0 0 16px rgba(255, 46, 151, 0.8);
-      }
-      #scrub::-moz-range-thumb {
-        width: 16px;
-        height: 16px;
-        border-radius: 50%;
-        background: #ff2e97;
-        border: 2px solid #ffe6fb;
-        cursor: pointer;
-        box-shadow: 0 0 10px rgba(255, 46, 151, 0.6);
-      }
-      #scrub::-moz-range-track {
-        background: transparent;
-        border: none;
-      }
       #time {
         font-size: 0.7em;
         color: #b8d8ff;
@@ -387,7 +345,6 @@
       @media (max-width: 200px) {
         .player-content .progress,
         #time,
-        #scrub,
         #live-btn {
           display: none;
         }
@@ -421,7 +378,6 @@
           </div>
           <div class="timeline">
             <div class="progress"><div id="progress-fill"></div></div>
-            <input id="scrub" type="range" disabled />
           </div>
           <div id="time"></div>
         </div>
@@ -447,7 +403,6 @@
       const timeLabel = document.getElementById('time');
       const playPause = document.getElementById('play-pause');
       const liveBtn = document.getElementById('live-btn');
-      const scrub = document.getElementById('scrub');
 
       let timeline = [];
       let nowPlayingSong = null;
@@ -581,7 +536,6 @@
         stopUpgradeProbe();
         teardownHls();
         audio.src = MP3_STREAM;
-        scrub.disabled = true;
         liveWall = Date.now() / 1000;
         attemptPlay();
         playPause.disabled = false;
@@ -753,13 +707,21 @@
           const pct = dur ? Math.min(100, (pos / dur) * 100) : 0;
           progressFill.style.width = pct + '%';
           timeLabel.textContent = dur ? fmt(pos) + ' / ' + fmt(dur) : '';
-          updateScrub();
           liveBtn.classList.toggle('live', isAtLive());
           return;
         }
 
         const wc = mediaToWall(audio.currentTime);
-        const song = nowPlayingSong || findSongAt(wc);
+        let song = nowPlayingSong;
+        if (song) {
+          const pos = wc - song.played_at;
+          if (pos >= song.duration) {
+            // API lagging — song should have ended, check timeline
+            song = findSongAt(wc) || song;
+          }
+        } else {
+          song = findSongAt(wc);
+        }
         if (song) {
           setArt(song.art);
           songText.textContent = song.title || song.text;
@@ -777,12 +739,7 @@
           fetchNow();
         }
 
-        updateScrub();
         liveBtn.classList.toggle('live', isAtLive());
-      }
-
-      function updateScrub() {
-        scrub.value = audio.currentTime;
       }
 
       playPause.addEventListener('click', () => {
