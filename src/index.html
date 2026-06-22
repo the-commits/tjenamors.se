@@ -120,7 +120,7 @@
 
       .city {
         position: absolute;
-        margin-top: 1em;
+        top: 2vh;
         height: 30em;
         animation: rising_city 1s ease-out forwards;
       }
@@ -167,19 +167,19 @@
           rgba(140, 30, 255, 1) 97.7%
         );
         border-radius: 100%;
-        width: 30em;
-        height: 30em;
+        width: min(30em, 80vw);
+        height: min(30em, 80vw);
         filter: drop-shadow(1em 0 0.5em #ff0d77af);
       }
 
       @keyframes rising_city {
         0% {
           height: 1em;
-          margin-top: 30em;
+          top: 100%;
         }
         100% {
           height: 35em;
-          margin-top: -4em;
+          top: 2vh;
         }
       }
 
@@ -217,8 +217,8 @@
       }
 
       #disc {
-        width: 26em;
-        height: 26em;
+        width: min(26em, 70vw);
+        height: min(26em, 70vw);
         background-size: cover;
         background-position: center;
         box-shadow: 0 0 3em #ff0d7760;
@@ -302,6 +302,8 @@
         text-transform: uppercase;
         letter-spacing: 0.12em;
         font-size: 0.85em;
+        min-height: auto;
+        height: auto;
         transition: all 0.2s ease;
         backdrop-filter: blur(4px);
       }
@@ -337,16 +339,17 @@
       #scrub {
         width: 22em;
         max-width: 80vw;
+        height: 1em;
         accent-color: #ff2e97;
         cursor: pointer;
       }
     </style>
   </head>
   <body class="font-sans antialiased overflow-hidden">
-    <div class="relative h-screen overflow-hidden pt-16" style="font-size: min(16px, 2.8vmin);">
-      <div class="relative mx-auto w-full h-full city overflow-hidden pt-8">
+    <div class="relative h-screen overflow-hidden" style="font-size: min(16px, 2.8vmin, 1.8vh);">
+      <div class="relative mx-auto w-full h-full city overflow-hidden">
         <div
-          class="sticky top-1/2 left-1/2 -translate-x-1/2 h-full w-full sun"
+          class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 sun"
         ></div>
       </div>
 
