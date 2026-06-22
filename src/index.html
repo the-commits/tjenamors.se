@@ -343,6 +343,22 @@
         accent-color: #ff2e97;
         cursor: pointer;
       }
+
+      /* xxs: smartwatch / tiny viewport — merged play/live, no timeline */
+      @media (max-width: 200px) {
+        .player-content .progress,
+        #time,
+        #scrub,
+        #live-btn {
+          display: none;
+        }
+        #play-pause:after {
+          content: ' LIVE';
+        }
+        .info {
+          font-size: 0.6em;
+        }
+      }
     </style>
   </head>
   <body class="font-sans antialiased overflow-hidden">
