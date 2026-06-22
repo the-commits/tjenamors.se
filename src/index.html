@@ -425,6 +425,7 @@
       let localStart = 0;
       let localSongId = '';
       let lastFetch = 0;
+      let elapsedCapturedAt = 0;
 
       function normalize(np) {
         if (!np || !np.song) return null;
@@ -455,6 +456,7 @@
           });
           const now = normalize(data.now_playing);
           nowPlayingSong = now;
+          elapsedCapturedAt = Date.now();
           if (now) songs.push(now);
           const next = normalize(data.playing_next);
           if (next) songs.push(next);
@@ -724,7 +726,7 @@
           setArt(song.art);
           songText.textContent = song.title || song.text;
           artistEl.textContent = song.artist || '';
-          const pos = Math.min(song.duration, Math.max(0, (song.elapsed || 0) + (Date.now() - lastFetch) / 1000));
+          const pos = Math.min(song.duration, Math.max(0, (song.elapsed || 0) + (Date.now() - elapsedCapturedAt) / 1000));
           const pct = song.duration ? Math.min(100, (pos / song.duration) * 100) : 0;
           progressFill.style.width = pct + '%';
           timeLabel.textContent = fmt(pos) + ' / ' + fmt(song.duration);
