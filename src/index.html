@@ -426,6 +426,14 @@
       let localSongId = '';
       let lastFetch = 0;
       let elapsedCapturedAt = 0;
+      const preloadedArt = new Set();
+
+      function preloadArt(url) {
+        if (!url || preloadedArt.has(url)) return;
+        preloadedArt.add(url);
+        const img = new Image();
+        img.src = url;
+      }
 
       function normalize(np) {
         if (!np || !np.song) return null;
@@ -470,6 +478,7 @@
               return true;
             })
             .sort((a, b) => a.played_at - b.played_at);
+          songs.forEach((s) => preloadArt(s.art));
         } catch (e) {
           console.error('nowplaying fetch failed', e);
         }
