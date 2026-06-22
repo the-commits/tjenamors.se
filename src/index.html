@@ -420,6 +420,8 @@
       let upgradeTimer = null;
       let audioPlaying = false;
       let nextUp = null;
+      let songStartAudioTime = 0;
+      let lastSongId = '';
       let localStart = 0;
       let localSongId = '';
       let lastFetch = 0;
@@ -712,21 +714,16 @@
         }
 
         const wc = mediaToWall(audio.currentTime);
-        let song = nowPlayingSong;
+        const song = nowPlayingSong || findSongAt(wc);
         if (song) {
-          const pos = wc - song.played_at;
-          if (pos >= song.duration) {
-            // API lagging — song should have ended, check timeline
-            song = findSongAt(wc) || song;
+          if (song.id && song.id !== lastSongId) {
+            lastSongId = song.id;
+            songStartAudioTime = audio.currentTime;
           }
-        } else {
-          song = findSongAt(wc);
-        }
-        if (song) {
           setArt(song.art);
           songText.textContent = song.title || song.text;
           artistEl.textContent = song.artist || '';
-          const pos = Math.min(song.duration, Math.max(0, wc - song.played_at));
+          const pos = Math.min(song.duration, Math.max(0, audio.currentTime - songStartAudioTime));
           const pct = song.duration ? Math.min(100, (pos / song.duration) * 100) : 0;
           progressFill.style.width = pct + '%';
           timeLabel.textContent = fmt(pos) + ' / ' + fmt(song.duration);
