@@ -450,6 +450,7 @@
       const scrub = document.getElementById('scrub');
 
       let timeline = [];
+      let nowPlayingSong = null;
       let hls = null;
       let liveWall = Date.now() / 1000;
       let scrubbing = false;
@@ -495,6 +496,7 @@
             if (s) songs.push(s);
           });
           const now = normalize(data.now_playing);
+          nowPlayingSong = now;
           if (now) songs.push(now);
           const next = normalize(data.playing_next);
           if (next) songs.push(next);
@@ -757,7 +759,7 @@
         }
 
         const wc = mediaToWall(audio.currentTime);
-        const song = findSongAt(wc);
+        const song = nowPlayingSong || findSongAt(wc);
         if (song) {
           setArt(song.art);
           songText.textContent = song.title || song.text;
@@ -881,7 +883,7 @@
       });
 
       pollNowPlaying();
-      setInterval(pollNowPlaying, 5000);
+      setInterval(pollNowPlaying, 2000);
       setupHls();
       render();
 
