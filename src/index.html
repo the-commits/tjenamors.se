@@ -432,6 +432,7 @@
         return {
           played_at: np.played_at,
           duration: np.duration || 0,
+          elapsed: np.elapsed || 0,
           art: np.song.art || null,
           title: np.song.title || '',
           artist: np.song.artist || '',
@@ -723,7 +724,7 @@
           setArt(song.art);
           songText.textContent = song.title || song.text;
           artistEl.textContent = song.artist || '';
-          const pos = Math.min(song.duration, Math.max(0, audio.currentTime - songStartAudioTime));
+          const pos = Math.min(song.duration, Math.max(0, (song.elapsed || 0) + (Date.now() - lastFetch) / 1000));
           const pct = song.duration ? Math.min(100, (pos / song.duration) * 100) : 0;
           progressFill.style.width = pct + '%';
           timeLabel.textContent = fmt(pos) + ' / ' + fmt(song.duration);
