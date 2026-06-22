@@ -5,7 +5,7 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "radio": "node scripts/azuracast.mjs",
-    "lint": "eslint scripts/*.mjs tests/*.mjs src/js/app.js",
+    "lint": "eslint scripts/*.mjs tests/*.mjs src/js/*.js",
     "lint:lines": "node scripts/check-line-length.mjs"
   },
   "devDependencies": {

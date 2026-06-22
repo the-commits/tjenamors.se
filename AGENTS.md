@@ -24,45 +24,76 @@ serves `dist/`.
 | Build | `node scripts/build.mjs` |
 | Clean rebuild | `rm -rf dist && node scripts/build.mjs` |
 | Radio API mgmt | `node scripts/azuracast.mjs <command>` |
-| Lint JS files | `npm run lint` (ESLint: `scripts/*.mjs tests/*.mjs src/js/app.js`) |
+| Lint JS files | `npm run lint` (ESLint: `scripts/*.mjs tests/*.mjs src/js/*.js`) |
 | Check line length | `npm run lint:lines` (max 120 cols) |
 | Run all E2E tests | `node tests/mobile-centering.mjs && node tests/sun-fade.mjs` |
+| Skip E2E on push | `SKIP_E2E=1 git push` |
 
 ## Workflow: trunk-based + TDD E2E
 
 - **Branch**: short-lived feature branches off `main`, merged via PR (1 review required)
 - **Main is protected** — direct pushes blocked, linear history required
 - **TDD cycle**: write a Puppeteer test → run it (fails) → fix code → test passes → PR
-- **Pre-push hook** (husky): runs `npm run lint && npm run lint:lines` before every push.
+- **Pre-push hook** (husky): runs lint → line-length → build → E2E tests.
   If the hook blocks you, fix the issue, `git add` the fix, and retry the push.
+  To skip E2E tests (slow), set `SKIP_E2E=1`.
 - **Commits must be signed**: `git commit -S -m "type: message"`
+
+## Cloudflare preview URLs
+
+Pushing any branch to GitHub automatically creates a Cloudflare Pages preview
+URL (e.g. `https://feature-modular-refactor.tjenamors.pages.dev`). Use this to
+verify changes in production-like environment before merging to `main`.
+
+To get the preview URL after a push:
+```
+gh run list --branch <branch-name> --json headBranch,databaseId \
+  --jq '.[0].databaseId' | xargs gh run view --log | grep "preview\|pages.dev"
+```
+
+Or check the Cloudflare Dashboard → Pages → tjenamors → <branch-name>.
 
 ## E2E testing (puppeteer)
 
 E2E tests live in `tests/` and use Puppeteer (install via `npm install`).
 Run with: `node tests/<name>.mjs`
 
-Two test suites exist:
+Two test suites exist (56 tests total):
 - `tests/mobile-centering.mjs` — 46 tests across 7 viewports for responsive layout
 - `tests/sun-fade.mjs` — 10 tests for sun opacity on play/pause and button text
 
+### test server
+
+Tests serve `dist/` via `tests/serve.mjs` (Node.js HTTP server) to circumvent
+`file://` CORS restrictions on ES modules. Imported automatically — no manual
+setup needed.
+
+## Code style
+
+Follow **DRY** (no duplication), **SRP** (one responsibility per file), and
+**KISS** (simple over clever). Keep files short and focused.
+
+- Use ES module `import`/`export` in JS (all under `src/js/`).
+- Use CSS `@import` to compose modules (entry via `src/css/style.css`).
+- Use Tailwind utility classes in HTML for layout/spacing; keep complex visual
+  effects (gradients, shadows, keyframes) in CSS modules.
+- Generated/minified assets (`src/build/assets/`) are excluded from this rule.
+
 ## Where to edit
 
-- **`src/index.html`** — HTML structure only (47 lines). Do **not** edit `dist/`
-  (generated, gitignored). Keep every line ≤120 chars.
-- **`src/css/style.css`** — all visual styles (synthwave sun, grid, player,
-  buttons, responsive breakpoints). 348 lines.
-- **`src/js/app.js`** — all client-side logic (HLS/MP3 streaming, AzuraCast API
-  polling, timeline rendering, cookie position save/restore, sun fade, grid
-  timing). 483 lines.
-- `src/build/assets/base.css` is minified Tailwind v3.3.3 + DaisyUI —
-  hand-editing is fragile.
-- `src/build/assets/*-legacy.css` are orphaned Vite/Vue artifacts, not loaded.
-- `src/robots.txt` has a Cloudflare-managed block between `BEGIN` / `END
-  Cloudflare Managed content` markers; edits outside them are safe.
-- `eslint.config.mjs` — ESLint flat config (v10+), max-len 120, ES2022 env.
-- `scripts/check-line-length.mjs` — post-build line-length linter, excludes
-  generated dirs.
+Edit `src/*` — do **not** edit `dist/` (generated, gitignored).
+
+- `src/index.html` — HTML structure only, ≤120 chars per line
+- `src/css/*` — all visual styles (synthwave sun, grid, player, buttons)
+- `src/js/*` — all client logic (HLS/MP3, API polling, timeline, cookie, sun)
+- `src/build/assets/base.css` — minified Tailwind v3.3.3 + DaisyUI, fragile
+- `src/build/assets/*-legacy.css` — orphaned Vite/Vue artifacts, not loaded
+- `src/robots.txt` — has Cloudflare-managed block between `BEGIN` / `END
+  Cloudflare Managed content` markers; edits outside them are safe
+
+Root-level files to know about:
+- `eslint.config.mjs` — ESLint flat config (v10+), max-len 120, ES2022 env
+- `scripts/*.mjs` — build, lint, radio API proxy
 
 ## Radio streaming
 
