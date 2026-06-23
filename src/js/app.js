@@ -6,7 +6,7 @@
 //   api.js  ← (standalone) ─────────────────────────────────── app.js
 
 import { pollNowPlaying } from './api.js';
-import { liveWall, setupHls } from './stream.js';
+import { tickLiveWall, setupHls } from './stream.js';
 import { render } from './timeline.js';
 import { revealPlayer } from './player.js';
 import { gridEl, gridContainer } from './dom.js';
@@ -24,7 +24,7 @@ setTimeout(() => {
 let saveTimer = 0;
 
 setInterval(() => {
-  liveWall = Date.now() / 1000;
+  tickLiveWall();
   render();
   const now = Date.now();
   if (now - saveTimer >= 5000) {
