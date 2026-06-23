@@ -1,0 +1,75 @@
+.grid-container {
+  width: 100%;
+  height: 100vh;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  pointer-events: none;
+  opacity: 0.7;
+  transition: opacity 1.5s ease;
+  animation: slideDown 4.6s ease-in 0.4s forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grid-container {
+    animation: none;
+  }
+}
+
+.synth-grid {
+  position: relative;
+  -webkit-backdrop-filter: blur(50%);
+  backdrop-filter: blur(50%);
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0),
+    hsl(var(--p)) 66%,
+    hsl(var(--p))
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0),
+    hsl(var(--p)) 66%,
+    hsl(var(--p))
+  );
+  background:
+    linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0) 0px,
+      rgba(54, 226, 248, 0.5) 0%,
+      rgba(54, 226, 248, 0.5) 3px,
+      rgba(0, 0, 0, 0) 0px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0) 0px,
+      rgba(54, 226, 248, 0.5) 0%,
+      rgba(54, 226, 248, 0.5) 3px,
+      rgba(0, 0, 0, 0) 0px
+    );
+  background-size:
+    2em 2em,
+    2em 2em;
+  height: 35em;
+  perspective: 1000px;
+  margin-top: 30em;
+  transform: perspective(600px) rotateX(60deg) scale(3);
+  animation: flyForward 4s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .synth-grid {
+    animation: none;
+  }
+}
+
+.synth-grid:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  background: linear-gradient(rgba(0, 0, 0, 0), hsl(var(--p)));
+  pointer-events: none;
+}

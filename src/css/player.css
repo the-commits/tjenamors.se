@@ -1,0 +1,125 @@
+.player {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25em;
+  pointer-events: none;
+  width: min(92vw, 40em);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.9s ease;
+}
+
+.player.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.player > * {
+  pointer-events: auto;
+}
+
+#disc {
+  width: min(26em, 70vw);
+  height: min(26em, 70vw);
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 0 3em #ff0d7760;
+  transition:
+    background-image 0.4s ease,
+    box-shadow 0.4s ease;
+}
+
+#disc.has-art {
+  border: 2px solid rgba(54, 226, 248, 0.6);
+  box-shadow:
+    0 0 3em #ff0d7770,
+    0 0 6em rgba(54, 226, 248, 0.25);
+}
+
+.info-shadow {
+  text-shadow:
+    0 0 8px #ff0d77aa,
+    0 0 2px #000;
+}
+
+.progress {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  overflow: hidden;
+  box-shadow: inset 0 0 4px rgba(0,0,0,0.3), 0 0 6px rgba(54, 226, 248, 0.15);
+}
+
+#progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #36e2f8, #ff2e97);
+  border-radius: 999px;
+  transition: width 0.3s linear;
+}
+
+.btn {
+  font-family: "Audiowide", sans-serif;
+  background: rgba(10, 6, 30, 0.55);
+  border: 1px solid rgba(255, 46, 151, 0.5);
+  color: #ffe6fb;
+  border-radius: 999px;
+  padding: 0.55em 1.3em;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.85em;
+  min-height: auto;
+  height: auto;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
+}
+
+.btn:hover {
+  background: rgba(255, 46, 151, 0.28);
+  box-shadow: 0 0 16px rgba(255, 46, 151, 0.5);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+  box-shadow: none;
+}
+
+#play-pause {
+  font-size: 1em;
+  padding: 0.55em 1.6em;
+}
+
+#live-btn.live {
+  border-color: #ff3b3b;
+  color: #ff6a6a;
+  box-shadow: 0 0 14px rgba(255, 59, 59, 0.6);
+}
+
+#live-btn.live::before {
+  content: "● ";
+  animation: livePulse 1.2s ease-in-out infinite;
+}
+
+/* xxs: smartwatch — merged play/live, no timeline */
+@media (max-width: 200px) {
+  .player .progress,
+  #time,
+  #live-btn {
+    display: none;
+  }
+  #play-pause:after {
+    content: ' LIVE';
+  }
+  .info {
+    font-size: 0.6em;
+  }
+}

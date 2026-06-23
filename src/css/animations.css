@@ -1,0 +1,33 @@
+@keyframes slideDown {
+  to { transform: translateY(100vh); }
+}
+
+@keyframes flyForward {
+  0% {
+    background-position:
+      0% 0%,
+      0% 0%;
+  }
+  100% {
+    background-position:
+      0% 100%,
+      0% 100%;
+  }
+}
+
+@keyframes rising_city {
+  0% {
+    height: 1em;
+    top: 100%;
+  }
+  100% {
+    height: 35em;
+    top: 2vh;
+  }
+}
+
+@keyframes livePulse {
+  50% {
+    opacity: 0.35;
+  }
+}

@@ -1,10 +1,7 @@
 import puppeteer from 'puppeteer';
-import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
+import { serve } from './serve.mjs';
 
-const root = dirname(fileURLToPath(import.meta.url));
-const dist = join(root, '..', 'dist', 'index.html');
-const url = `file://${dist}`;
+const { server, url } = await serve();
 
 const VIEWPORTS = [
   { name: 'xxs (128x128)',            w: 128,  h: 128  },
@@ -98,6 +95,7 @@ async function run() {
   }
 
   await browser.close();
+  server.close();
 
   console.log(`\n===== Results: ${passed} passed, ${failures} failed =====`);
   if (failures > 0) process.exit(1);

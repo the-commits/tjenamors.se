@@ -1,1 +1,8 @@
 npm run lint && npm run lint:lines
+
+# Run E2E tests unless SKIP_E2E=1 is set
+if [ -z "$SKIP_E2E" ]; then
+  node scripts/build.mjs && \
+  node tests/mobile-centering.mjs && \
+  node tests/sun-fade.mjs
+fi
