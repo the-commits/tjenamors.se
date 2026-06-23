@@ -42,6 +42,51 @@
     0 0 6em rgba(54, 226, 248, 0.25);
 }
 
+.player-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 2.5em;
+  gap: 1.5em;
+}
+
+.info-text {
+  color: #ffe6fb;
+  width: 22em;
+  max-width: 80vw;
+  font-family: 'Audiowide', sans-serif;
+}
+
+#song-text {
+  font-size: 1.15em;
+  font-weight: 500;
+}
+
+#artist {
+  margin-top: 0.35em;
+}
+
+.controls {
+  display: flex;
+  gap: 0.9em;
+  justify-content: center;
+  align-items: center;
+}
+
+.timeline-wrap {
+  position: relative;
+  width: 22em;
+  max-width: 80vw;
+  margin: 0.8em auto 0;
+}
+
+#time {
+  margin-top: 0.5em;
+  color: #b8d8ff;
+  font-size: 0.7em;
+}
+
 .info-shadow {
   text-shadow:
     0 0 8px #ff0d77aa,
