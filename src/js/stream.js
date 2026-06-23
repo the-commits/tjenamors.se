@@ -16,6 +16,10 @@ export function setSuppressSeekGuard(v) {
   suppressSeekGuard = v;
 }
 
+export function tickLiveWall() {
+  liveWall = Date.now() / 1000;
+}
+
 let hlsFailCount = 0;
 let upgradeTimer = null;
 let recoverTimer = null;
