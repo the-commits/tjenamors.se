@@ -109,27 +109,21 @@ export function teardownHls() {
 
 export function setupHls() {
   mode = 'hls';
-  if (audio.canPlayType('application/vnd.apple.mpegurl')) {
-    audio.src = HLS_STREAM;
-    audio.addEventListener('loadedmetadata', onReady);
-    audio.addEventListener('error', onAudioError);
-    audio.addEventListener('stalled', onAudioStalled);
-    audio.addEventListener('waiting', onAudioStalled);
-  } else if (window.Hls && Hls.isSupported()) {
+  if (window.Hls && Hls.isSupported()) {
     hls = new Hls({
       lowLatencyMode: false,
       enableWorker: true,
-      maxBufferLength: 60,
-      maxMaxBufferLength: 180,
-      liveSyncDuration: 30,
+      maxBufferLength: 120,
+      maxMaxBufferLength: 300,
+      liveSyncDuration: 90,
       liveDurationInfinity: true,
       backBufferLength: 60,
       manifestLoadingMaxRetry: 6,
       manifestLoadingTimeOut: 20000,
-      levelLoadingTimeOut: 20000,
-      fragLoadingTimeOut: 20000,
+      levelLoadingTimeOut: 60000,
+      fragLoadingTimeOut: 60000,
       maxFragLookUpTolerance: 0.25,
-      abrEwmaDefaultEstimate: 500000,
+      abrEwmaDefaultEstimate: 200000,
       abrBandWidthFactor: 0.7,
       abrBandWidthUpFactor: 0.6,
     });
@@ -139,6 +133,12 @@ export function setupHls() {
     hls.on(Hls.Events.ERROR, (_e, data) => {
       if (data.fatal) onHlsFatal(data);
     });
+    audio.addEventListener('stalled', onAudioStalled);
+    audio.addEventListener('waiting', onAudioStalled);
+  } else if (audio.canPlayType('application/vnd.apple.mpegurl')) {
+    audio.src = HLS_STREAM;
+    audio.addEventListener('loadedmetadata', onReady);
+    audio.addEventListener('error', onAudioError);
     audio.addEventListener('stalled', onAudioStalled);
     audio.addEventListener('waiting', onAudioStalled);
   } else {
