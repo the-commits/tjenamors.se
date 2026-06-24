@@ -2,7 +2,7 @@
 // Depends on api.js for state, stream.js for sync, position.js for cookie.
 
 import {
-  nowPlayingSong, nextUp, isOnline, elapsedCapturedAt, fetchNow,
+  nowPlayingSong, timeline, nextUp, isOnline, elapsedCapturedAt, fetchNow,
 } from './api.js';
 import { mode, hls, isAtLive, syncPosition } from './stream.js';
 import {
@@ -20,6 +20,16 @@ export function fmt(s) {
   const m = (s / 60) | 0;
   const r = s % 60;
   return m + ':' + String(r).padStart(2, '0');
+}
+
+function findSongAt(wc) {
+  const exact = timeline.find((s) => wc >= s.played_at && wc < s.played_at + s.duration);
+  if (exact) return exact;
+  let fallback = null;
+  for (const s of timeline) {
+    if (s.played_at <= wc && (!fallback || s.played_at > fallback.played_at)) fallback = s;
+  }
+  return fallback;
 }
 
 export function setArt(url) {
@@ -69,42 +79,42 @@ export function render() {
 
   if (nowPlayingSong) {
     const apiElapsed = (nowPlayingSong.elapsed || 0) + (Date.now() - elapsedCapturedAt) / 1000;
-    const effectiveElapsed = Math.max(0, apiElapsed - behind);
+    // effectiveElapsed can be negative (user hasn't reached song yet)
+    const effectiveElapsed = apiElapsed - behind;
+    // wall clock position of the audio the user hears
+    const wc = nowPlayingSong.played_at + effectiveElapsed;
 
-    // Use nowPlayingSong if the user is still within its range
-    if (effectiveElapsed < nowPlayingSong.duration) {
-      if (nowPlayingSong.id && nowPlayingSong.id !== lastSongId) {
-        lastSongId = nowPlayingSong.id;
-      }
-      setArt(nowPlayingSong.art);
-      songText.textContent = nowPlayingSong.title || nowPlayingSong.text;
-      artistEl.textContent = nowPlayingSong.artist || '';
-      const pos = Math.min(nowPlayingSong.duration, Math.max(0, effectiveElapsed));
-      const pct = nowPlayingSong.duration ? Math.min(100, (pos / nowPlayingSong.duration) * 100) : 0;
-      progressFill.style.width = pct + '%';
-      timeLabel.textContent = fmt(pos) + ' / ' + fmt(nowPlayingSong.duration);
+    let song;
+    let pos;
+
+    if (effectiveElapsed >= 0 && effectiveElapsed < nowPlayingSong.duration) {
+      // User hears the current song, just delayed
+      song = nowPlayingSong;
+      pos = effectiveElapsed;
     } else {
-      // Past current song — try nextUp
-      const next = nextUp && nextUp.id ? nextUp : null;
-      if (next) {
-        if (next.id !== lastSongId) {
-          lastSongId = next.id;
-        }
-        setArt(next.art);
-        songText.textContent = next.title || next.text;
-        artistEl.textContent = next.artist || '';
-        const remaining = effectiveElapsed - nowPlayingSong.duration;
-        const pos = Math.min(next.duration, Math.max(0, remaining));
-        const pct = next.duration ? Math.min(100, (pos / next.duration) * 100) : 0;
-        progressFill.style.width = pct + '%';
-        timeLabel.textContent = fmt(pos) + ' / ' + fmt(next.duration);
-      } else {
-        setArt(null);
-        songText.textContent = 'TjenaMors Radio';
-        artistEl.textContent = 'Vi spelar bra skit!';
-        progressFill.style.width = '0%';
-        timeLabel.textContent = '';
+      // User is hearing a different song (previous or next) — look up via timeline
+      song = findSongAt(wc);
+      if (!song && nextUp && nextUp.id) song = nextUp;
+      if (song) pos = Math.max(0, wc - song.played_at);
+    }
+
+    if (song) {
+      if (song.id && song.id !== lastSongId) {
+        lastSongId = song.id;
       }
+      setArt(song.art);
+      songText.textContent = song.title || song.text;
+      artistEl.textContent = song.artist || '';
+      const clampedPos = Math.min(song.duration, Math.max(0, pos));
+      const pct = song.duration ? Math.min(100, (clampedPos / song.duration) * 100) : 0;
+      progressFill.style.width = pct + '%';
+      timeLabel.textContent = fmt(clampedPos) + ' / ' + fmt(song.duration);
+    } else {
+      setArt(null);
+      songText.textContent = 'TjenaMors Radio';
+      artistEl.textContent = 'Vi spelar bra skit!';
+      progressFill.style.width = '0%';
+      timeLabel.textContent = '';
     }
   } else {
     setArt(null);
