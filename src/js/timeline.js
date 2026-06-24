@@ -4,7 +4,7 @@
 import {
   nowPlayingSong, nextUp, isOnline, elapsedCapturedAt, fetchNow,
 } from './api.js';
-import { mode, isAtLive, syncPosition } from './stream.js';
+import { mode, hls, isAtLive, syncPosition } from './stream.js';
 import {
   audio, disc, songText, artistEl, progressFill, timeLabel, liveBtn,
 } from './dom.js';
