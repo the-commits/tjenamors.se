@@ -2,9 +2,9 @@
 // Depends on api.js for state, stream.js for sync, position.js for cookie.
 
 import {
-  nowPlayingSong, timeline, nextUp, isOnline, elapsedCapturedAt, fetchNow,
+  nowPlayingSong, nextUp, isOnline, elapsedCapturedAt, fetchNow,
 } from './api.js';
-import { liveWall, mode, userSeeked, mediaToWall, isAtLive, syncPosition } from './stream.js';
+import { mode, isAtLive, syncPosition } from './stream.js';
 import {
   audio, disc, songText, artistEl, progressFill, timeLabel, liveBtn,
 } from './dom.js';
@@ -12,7 +12,6 @@ import { savePosition } from './position.js';
 
 let currentArt = '';
 let lastSongId = '';
-let songStartAudioTime = 0;
 let localStart = 0;
 let localSongId = '';
 
@@ -21,16 +20,6 @@ export function fmt(s) {
   const m = (s / 60) | 0;
   const r = s % 60;
   return m + ':' + String(r).padStart(2, '0');
-}
-
-function findSongAt(wc) {
-  const exact = timeline.find((s) => wc >= s.played_at && wc < s.played_at + s.duration);
-  if (exact) return exact;
-  let fallback = null;
-  for (const s of timeline) {
-    if (s.played_at <= wc && (!fallback || s.played_at > fallback.played_at)) fallback = s;
-  }
-  return fallback;
 }
 
 export function setArt(url) {
@@ -75,23 +64,48 @@ export function render() {
     return;
   }
 
-  const wc = mediaToWall(audio.currentTime);
   const target = syncPosition();
-  const nearLive = mode === 'mp3' || Math.abs(audio.currentTime - target) < 60;
-  const song = nearLive ? (nowPlayingSong || findSongAt(wc)) : findSongAt(wc);
-  if (song) {
-    if (song.id && song.id !== lastSongId) {
-      lastSongId = song.id;
-      songStartAudioTime = audio.currentTime;
+  const behind = mode === 'hls' && hls ? Math.max(0, target - audio.currentTime) : 0;
+
+  if (nowPlayingSong) {
+    const apiElapsed = (nowPlayingSong.elapsed || 0) + (Date.now() - elapsedCapturedAt) / 1000;
+    const effectiveElapsed = Math.max(0, apiElapsed - behind);
+
+    // Use nowPlayingSong if the user is still within its range
+    if (effectiveElapsed < nowPlayingSong.duration) {
+      if (nowPlayingSong.id && nowPlayingSong.id !== lastSongId) {
+        lastSongId = nowPlayingSong.id;
+      }
+      setArt(nowPlayingSong.art);
+      songText.textContent = nowPlayingSong.title || nowPlayingSong.text;
+      artistEl.textContent = nowPlayingSong.artist || '';
+      const pos = Math.min(nowPlayingSong.duration, Math.max(0, effectiveElapsed));
+      const pct = nowPlayingSong.duration ? Math.min(100, (pos / nowPlayingSong.duration) * 100) : 0;
+      progressFill.style.width = pct + '%';
+      timeLabel.textContent = fmt(pos) + ' / ' + fmt(nowPlayingSong.duration);
+    } else {
+      // Past current song — try nextUp
+      const next = nextUp && nextUp.id ? nextUp : null;
+      if (next) {
+        if (next.id !== lastSongId) {
+          lastSongId = next.id;
+        }
+        setArt(next.art);
+        songText.textContent = next.title || next.text;
+        artistEl.textContent = next.artist || '';
+        const remaining = effectiveElapsed - nowPlayingSong.duration;
+        const pos = Math.min(next.duration, Math.max(0, remaining));
+        const pct = next.duration ? Math.min(100, (pos / next.duration) * 100) : 0;
+        progressFill.style.width = pct + '%';
+        timeLabel.textContent = fmt(pos) + ' / ' + fmt(next.duration);
+      } else {
+        setArt(null);
+        songText.textContent = 'TjenaMors Radio';
+        artistEl.textContent = 'Vi spelar bra skit!';
+        progressFill.style.width = '0%';
+        timeLabel.textContent = '';
+      }
     }
-    setArt(song.art);
-    songText.textContent = song.title || song.text;
-    artistEl.textContent = song.artist || '';
-    const elapsedSec = (song.elapsed || 0) + (Date.now() - elapsedCapturedAt) / 1000;
-    const pos = Math.min(song.duration, Math.max(0, elapsedSec));
-    const pct = song.duration ? Math.min(100, (pos / song.duration) * 100) : 0;
-    progressFill.style.width = pct + '%';
-    timeLabel.textContent = fmt(pos) + ' / ' + fmt(song.duration);
   } else {
     setArt(null);
     songText.textContent = 'TjenaMors Radio';
