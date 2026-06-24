@@ -94,8 +94,13 @@ export function render() {
     } else {
       // User is hearing a different song (previous or next) — look up via timeline
       song = findSongAt(wc);
-      if (!song && nextUp && nextUp.id) song = nextUp;
-      if (song) pos = Math.max(0, wc - song.played_at);
+      if (!song) {
+        // song_history empty or doesn't cover this time — show nowPlayingSong at its start
+        song = nowPlayingSong;
+        pos = Math.max(0, effectiveElapsed);
+      } else {
+        pos = Math.max(0, wc - song.played_at);
+      }
     }
 
     if (song) {
