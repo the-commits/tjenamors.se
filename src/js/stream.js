@@ -114,7 +114,6 @@ export function setupHls() {
     hls = new Hls({
       lowLatencyMode: false,
       enableWorker: true,
-      startLevel: 0,
       maxBufferLength: 120,
       maxMaxBufferLength: 300,
       liveSyncDuration: 90,
@@ -134,7 +133,22 @@ export function setupHls() {
     });
     hls.loadSource(HLS_STREAM);
     hls.attachMedia(audio);
-    hls.on(Hls.Events.MANIFEST_PARSED, onReady);
+    hls.on(Hls.Events.MANIFEST_PARSED, () => {
+      // Force lowest bitrate level — playlist is not sorted by bandwidth
+      const levels = hls.levels;
+      if (levels && levels.length) {
+        let idx = 0;
+        let minBw = levels[0].bitrate;
+        for (let i = 1; i < levels.length; i++) {
+          if (levels[i].bitrate < minBw) {
+            minBw = levels[i].bitrate;
+            idx = i;
+          }
+        }
+        hls.currentLevel = idx;
+      }
+      onReady();
+    });
     hls.on(Hls.Events.ERROR, (_e, data) => {
       if (data.fatal) onHlsFatal(data);
     });
