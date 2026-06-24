@@ -127,8 +127,8 @@ export function setupHls() {
       maxFragLookUpTolerance: 0.25,
       maxStarvationDelay: 30,
       abrEwmaDefaultEstimate: 50000,
-      abrEwmaFastLive: 15,
-      abrEwmaSlowLive: 45,
+      abrEwmaFast: 15,
+      abrEwmaSlow: 45,
       abrBandWidthFactor: 0.7,
       abrBandWidthUpFactor: 0.6,
     });
