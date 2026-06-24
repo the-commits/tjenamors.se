@@ -4,7 +4,7 @@
 import {
   nowPlayingSong, timeline, nextUp, isOnline, elapsedCapturedAt, fetchNow,
 } from './api.js';
-import { liveWall, mode, userSeeked, mediaToWall, isAtLive } from './stream.js';
+import { liveWall, mode, userSeeked, mediaToWall, isAtLive, syncPosition } from './stream.js';
 import {
   audio, disc, songText, artistEl, progressFill, timeLabel, liveBtn,
 } from './dom.js';
@@ -76,7 +76,9 @@ export function render() {
   }
 
   const wc = mediaToWall(audio.currentTime);
-  const song = nowPlayingSong || findSongAt(wc);
+  const target = syncPosition();
+  const nearLive = mode === 'mp3' || Math.abs(audio.currentTime - target) < 60;
+  const song = nearLive ? (nowPlayingSong || findSongAt(wc)) : findSongAt(wc);
   if (song) {
     if (song.id && song.id !== lastSongId) {
       lastSongId = song.id;
