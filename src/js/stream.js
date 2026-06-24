@@ -23,6 +23,7 @@ export function tickLiveWall() {
 let hlsFailCount = 0;
 let upgradeTimer = null;
 let recoverTimer = null;
+let recoverAttempts = 0;
 let unmuted = false;
 
 export function trueEdgeMedia() {
@@ -83,6 +84,7 @@ export function attemptPlay() {
 export function onReady() {
   playPause.disabled = false;
   hlsFailCount = 0;
+  recoverAttempts = 0;
   const p = loadPosition();
   if (p && p.t && Date.now() - p.ts < 3600000 && audio.seekable.length &&
       p.t >= audio.seekable.start(0) && p.t <= audio.seekable.end(audio.seekable.length - 1)) {
@@ -99,6 +101,8 @@ export function teardownHls() {
     hls = null;
   }
   audio.removeEventListener('error', onAudioError);
+  audio.removeEventListener('stalled', onAudioStalled);
+  audio.removeEventListener('waiting', onAudioStalled);
   audio.removeAttribute('src');
   audio.load();
 }
@@ -109,18 +113,25 @@ export function setupHls() {
     audio.src = HLS_STREAM;
     audio.addEventListener('loadedmetadata', onReady);
     audio.addEventListener('error', onAudioError);
+    audio.addEventListener('stalled', onAudioStalled);
+    audio.addEventListener('waiting', onAudioStalled);
   } else if (window.Hls && Hls.isSupported()) {
     hls = new Hls({
       lowLatencyMode: false,
       enableWorker: true,
-      maxBufferLength: 40,
-      maxMaxBufferLength: 120,
-      liveSyncDuration: 20,
+      maxBufferLength: 60,
+      maxMaxBufferLength: 180,
+      liveSyncDuration: 30,
       liveDurationInfinity: true,
-      backBufferLength: 600,
-      manifestLoadingMaxRetry: 4,
-      levelLoadingTimeOut: 10000,
-      maxFragLookUpTolerance: 2,
+      backBufferLength: 60,
+      manifestLoadingMaxRetry: 6,
+      manifestLoadingTimeOut: 20000,
+      levelLoadingTimeOut: 20000,
+      fragLoadingTimeOut: 20000,
+      maxFragLookUpTolerance: 0.25,
+      abrEwmaDefaultEstimate: 500000,
+      abrBandWidthFactor: 0.7,
+      abrBandWidthUpFactor: 0.6,
     });
     hls.loadSource(HLS_STREAM);
     hls.attachMedia(audio);
@@ -128,6 +139,8 @@ export function setupHls() {
     hls.on(Hls.Events.ERROR, (_e, data) => {
       if (data.fatal) onHlsFatal(data);
     });
+    audio.addEventListener('stalled', onAudioStalled);
+    audio.addEventListener('waiting', onAudioStalled);
   } else {
     switchToMp3();
   }
@@ -139,6 +152,16 @@ export function onHlsFatal(data) {
     scheduleRecover();
   } else {
     switchToMp3();
+  }
+}
+
+export function onAudioStalled() {
+  if (mode === 'hls' && hls && !audio.paused) {
+    recoverAttempts++;
+    if (recoverAttempts >= 4) {
+      switchToMp3();
+      return;
+    }
   }
 }
 
@@ -188,9 +211,15 @@ export function stopUpgradeProbe() {
 
 export function scheduleRecover() {
   if (recoverTimer) return;
+  recoverAttempts++;
+  const delay = Math.min(15000 * Math.pow(2, recoverAttempts - 1), 120000);
   recoverTimer = setTimeout(() => {
     recoverTimer = null;
     if (!audio.paused && audio.readyState < 3) {
+      if (recoverAttempts >= 4) {
+        switchToMp3();
+        return;
+      }
       const seekTarget = userSeeked ? audio.currentTime : null;
       teardownHls();
       setupHls();
@@ -204,5 +233,5 @@ export function scheduleRecover() {
         goLive();
       }
     }
-  }, 15000);
+  }, delay);
 }
