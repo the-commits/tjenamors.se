@@ -25,6 +25,7 @@ let upgradeTimer = null;
 let recoverTimer = null;
 let recoverAttempts = 0;
 let unmuted = false;
+export { unmuted };
 
 export function trueEdgeMedia() {
   if (mode === 'mp3') return audio.currentTime;

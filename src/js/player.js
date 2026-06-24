@@ -7,7 +7,7 @@ import {
 import {
   mode, userSeeked, isAtLive, goLive, syncPosition,
   lastUserPos, suppressSeekGuard, setSuppressSeekGuard, scheduleRecover,
-  clearRecover,
+  clearRecover, unmuted,
 } from './stream.js';
 import { render } from './timeline.js';
 
@@ -46,6 +46,7 @@ audio.addEventListener('seeking', () => {
 });
 
 audio.addEventListener('play', () => {
+  if (!unmuted) return;
   playPause.textContent = '❚❚';
   if (sunEl) sunEl.style.opacity = '0.1';
 });
