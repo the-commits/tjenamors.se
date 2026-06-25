@@ -123,9 +123,9 @@ async function run() {
   const liveBtn = await page.$('#live-btn');
   check('Live button exists', !!liveBtn, '#live-btn not found');
 
-  // Check play button initial text (muted autoplay with silent wav → playing → ❚❚)
+  // Check play button initial text (muted autoplay → shows ▶ until user clicks)
   const playText = await page.evaluate(() => document.getElementById('play-pause')?.textContent);
-  check('Play button shows ❚❚ on autoplay', playText === '❚❚', `got "${playText}"`);
+  check('Play button shows ▶ on muted autoplay', playText === '▶', `got "${playText}"`);
 
   // Check live button initial text
   const liveText = await page.evaluate(() => document.getElementById('live-btn')?.textContent);
@@ -137,9 +137,30 @@ async function run() {
   const transition = await getStyle(page, '.city > .sun', 'transition');
   check('Sun has opacity transition', transition?.includes('opacity 2s'), `got "${transition}"`);
 
-  // Check sun starts at opacity 0.1 (autoplay play event faded it)
-  const initialOpacity = await getInlineStyle(page, '.city > .sun', 'opacity');
-  check('Sun is at opacity 0.1 after autoplay', initialOpacity === '0.1', `got "${initialOpacity}"`);
+  // Check sun starts at opacity 1 (CSS default, no inline style set on muted autoplay)
+  const mutedOpacity = await getStyle(page, '.city > .sun', 'opacity');
+  check('Sun is at opacity 1 on muted autoplay', mutedOpacity === '1', `got "${mutedOpacity}"`);
+
+  console.log('\n--- Unmute via click → sun fades to 0.1 ---');
+
+  // Simulate user click to unmute (matches attemptPlay() flow in app.js/stream.js).
+  // Dispatch on document directly (MouseEvent defaults to bubbles: false).
+  // After unmute, manually dispatch play event since audio is already playing
+  // and play() on an already-playing element is a no-op.
+  await page.evaluate(() => {
+    document.dispatchEvent(new MouseEvent('click'));
+    const a = document.querySelector('audio');
+    if (a) a.dispatchEvent(new Event('play'));
+  });
+  // Wait for the 2s CSS transition to complete
+  await page.evaluate(() => new Promise(r => setTimeout(r, 2200)));
+
+  const unmutedOpacity = await getInlineStyle(page, '.city > .sun', 'opacity');
+  check('Sun is at opacity 0.1 after unmute', unmutedOpacity === '0.1', `got "${unmutedOpacity}"`);
+
+  // Button text should be ❚❚ after unmute
+  const afterUnmuteText = await page.evaluate(() => document.getElementById('play-pause')?.textContent);
+  check('Play button shows ❚❚ after unmute', afterUnmuteText === '❚❚', `got "${afterUnmuteText}"`);
 
   console.log('\n--- Pause audio → sun returns to 1 ---');
 
