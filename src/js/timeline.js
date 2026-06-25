@@ -2,9 +2,9 @@
 // Depends on api.js for state, stream.js for sync, position.js for cookie.
 
 import {
-  nowPlayingSong, timeline, nextUp, isOnline, elapsedCapturedAt, fetchNow,
+  nowPlayingSong, timeline, nextUp, isOnline, fetchNow,
 } from './api.js';
-import { mode, hls, isAtLive, syncPosition } from './stream.js';
+import { mode, hls, isAtLive } from './stream.js';
 import {
   audio, disc, songText, artistEl, progressFill, timeLabel, liveBtn,
 } from './dom.js';
@@ -74,32 +74,46 @@ export function render() {
     return;
   }
 
-  const target = syncPosition();
-  const behind = mode === 'hls' && hls ? Math.max(0, target - audio.currentTime) : 0;
+  // Wall clock of the audio the user hears.
+  // liveSyncPosition is ~HLS_LATENCY seconds behind the live edge;
+  // audio.currentTime is 'behind' seconds behind liveSyncPosition.
+  // Total content age = HLS_LATENCY + behind.
+  // HLS_LATENCY must match liveSyncDuration in stream.js setupHls() config.
+  const HLS_LATENCY = 60;
+  const now = Date.now() / 1000;
+  const behind = mode === 'hls' && hls && hls.liveSyncPosition
+    ? Math.max(0, hls.liveSyncPosition - audio.currentTime)
+    : 0;
+  const userWallClock = mode === 'hls' ? now - HLS_LATENCY - behind : now;
 
   if (nowPlayingSong) {
-    const apiElapsed = (nowPlayingSong.elapsed || 0) + (Date.now() - elapsedCapturedAt) / 1000;
-    // effectiveElapsed can be negative (user hasn't reached song yet)
-    const effectiveElapsed = apiElapsed - behind;
-    // wall clock position of the audio the user hears
-    const wc = nowPlayingSong.played_at + effectiveElapsed;
+    const currentStart = nowPlayingSong.played_at;
+    const currentEnd = currentStart + (nowPlayingSong.duration || 0);
 
     let song;
     let pos;
 
-    if (effectiveElapsed >= 0 && effectiveElapsed < nowPlayingSong.duration) {
-      // User hears the current song, just delayed
+    if (userWallClock >= currentStart && userWallClock < currentEnd) {
+      // User hears the current song
       song = nowPlayingSong;
-      pos = effectiveElapsed;
-    } else {
-      // User is hearing a different song (previous or next) — look up via timeline
-      song = findSongAt(wc);
-      if (!song) {
-        // song_history empty or doesn't cover this time — show nowPlayingSong at its start
-        song = nowPlayingSong;
-        pos = Math.max(0, effectiveElapsed);
+      pos = Math.max(0, userWallClock - currentStart);
+    } else if (userWallClock < currentStart) {
+      // User hears a previous song — look in history
+      song = findSongAt(userWallClock);
+      if (song) {
+        pos = Math.max(0, userWallClock - song.played_at);
       } else {
-        pos = Math.max(0, wc - song.played_at);
+        song = nowPlayingSong;
+        pos = 0;
+      }
+    } else {
+      // Current song has ended — look forward in timeline
+      song = findSongAt(userWallClock);
+      if (song) {
+        pos = Math.max(0, userWallClock - song.played_at);
+      } else {
+        song = nowPlayingSong;
+        pos = nowPlayingSong.duration || 0;
       }
     }
 
