@@ -2,9 +2,9 @@
 // Depends on api.js for state, stream.js for sync, position.js for cookie.
 
 import {
-  nowPlayingSong, timeline, nextUp, isOnline, fetchNow,
+  nowPlayingSong, timeline, nextUp, isOnline, fetchNow, elapsedCapturedAt,
 } from './api.js';
-import { mode, isAtLive, mediaToWallOffset } from './stream.js';
+import { mode, isAtLive } from './stream.js';
 import {
   audio, disc, songText, artistEl, progressFill, timeLabel, liveBtn,
 } from './dom.js';
@@ -75,13 +75,23 @@ export function render() {
   }
 
   // Wall clock of the audio the user hears.
-  // mediaToWallOffset is derived from segment filename timestamps (Unix epoch
-  // embedded in URLs like aac_hifi_60_1782420988_49753.ts). When available,
-  // userWallClock = audio.currentTime + offset — exact regardless of buffer
-  // size or HLS latency. Falls back to real-time for MP3 (near-zero latency)
-  // or before the first HLS fragment loads.
-  const userWallClock = mode === 'hls' && mediaToWallOffset
-    ? audio.currentTime + mediaToWallOffset
+  // The API gives us the real broadcast wall clock (played_at + elapsed).
+  // The user is contentAge seconds behind the HLS live edge (buffer ahead
+  // of playhead). In a real-time live stream, media seconds ≈ wall clock
+  // seconds, so contentAge approximates the user's wall-clock lag.
+  //
+  // This avoids relying on HLS segment filename timestamps or client-server
+  // clock alignment. The result may be up to ~20s ahead of the user's actual
+  // position (due to HLS encoding latency unaccounted for), but is far more
+  // accurate than the old Date.now()-based approach which could be >60s off.
+  const seekableEnd = audio.seekable.length
+    ? audio.seekable.end(audio.seekable.length - 1)
+    : 0;
+  const contentAge = mode === 'hls' && seekableEnd
+    ? Math.max(0, seekableEnd - audio.currentTime)
+    : 0;
+  const userWallClock = mode === 'hls' && seekableEnd && nowPlayingSong
+    ? (nowPlayingSong.played_at + nowPlayingSong.elapsed) - contentAge
     : Date.now() / 1000;
 
   if (nowPlayingSong) {

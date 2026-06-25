@@ -57,7 +57,7 @@ export function isAtLive() {
   if (mode === 'mp3') return true;
   const edge = trueEdgeMedia();
   if (!edge) return false;
-  return Math.abs(edge - audio.currentTime) < 10;
+  return Math.abs(edge - audio.currentTime) < 20;
 }
 
 export function goLive() {
@@ -68,7 +68,7 @@ export function goLive() {
     return;
   }
   const edge = trueEdgeMedia();
-  if (edge) audio.currentTime = Math.max(0, edge - 3);
+  if (edge) audio.currentTime = Math.max(0, edge - 15);
   liveWall = Date.now() / 1000;
   audio.play().catch(() => {});
 }
@@ -149,8 +149,11 @@ export function setupHls() {
     window.__hls = hls;
     hls.on(Hls.Events.FRAG_PARSED, (_e, data) => {
       const wc = parseSegmentWallClock(data.frag.url);
-      if (wc !== null && data.frag && data.frag.start !== undefined) {
-        mediaToWallOffset = wc - data.frag.start;
+      if (wc !== null && data.frag && data.frag.start !== undefined && data.frag.duration) {
+        // The segment filename timestamp is the FILE creation time (end of segment).
+        // Subtract the actual fragment duration to get the wall clock of the
+        // fragment's start. This gives an accurate media-time-to-wall-clock offset.
+        mediaToWallOffset = (wc - data.frag.duration) - data.frag.start;
         window.__mediaToWallOffset = mediaToWallOffset;
       }
     });
