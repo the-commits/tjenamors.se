@@ -134,6 +134,8 @@ export function setupHls() {
     });
     hls.loadSource(HLS_STREAM);
     hls.attachMedia(audio);
+    // Expose for E2E tests (tests/abr-speeds.mjs reads window.__hls)
+    window.__hls = hls;
     hls.on(Hls.Events.MANIFEST_PARSED, () => {
       // Start at lowest bitrate level — playlist is not sorted by bandwidth. ABR takes over after first segment.
       const levels = hls.levels;

@@ -4,5 +4,6 @@ npm run lint && npm run lint:lines
 if [ -z "$SKIP_E2E" ]; then
   node scripts/build.mjs && \
   node tests/mobile-centering.mjs && \
-  node tests/sun-fade.mjs
+  node tests/sun-fade.mjs && \
+  node tests/abr-speeds.mjs
 fi
