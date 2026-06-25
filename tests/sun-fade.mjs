@@ -196,6 +196,38 @@ async function run() {
   const afterPlayText = await page.evaluate(() => document.getElementById('play-pause')?.textContent);
   check('Play button shows ❚❚ after play', afterPlayText === '❚❚', `got "${afterPlayText}"`);
 
+  console.log('\n--- Click Live before unmute → sun fades, button changes ---');
+
+  // Pause and re-mute to reset to the "before user interaction" state.
+  // Then click the Live button (not play/pause) — this should unmute
+  // and trigger the visual update via the document click listener.
+  await page.evaluate(() => {
+    const a = document.querySelector('audio');
+    if (a) { a.pause(); a.muted = true; }
+  });
+  await page.evaluate(() => new Promise(r => setTimeout(r, 2200)));
+
+  const preLiveOpacity = await getInlineStyle(page, '.city > .sun', 'opacity');
+  check('Sun is at opacity 1 before Live click', preLiveOpacity === '1', `got "${preLiveOpacity}"`);
+
+  const preLiveText = await page.evaluate(() => document.getElementById('play-pause')?.textContent);
+  check('Play button shows ▶ before Live click', preLiveText === '▶', `got "${preLiveText}"`);
+
+  // Click the Live button — should unmute + play + fade sun + show ❚❚
+  await page.evaluate(() => {
+    const btn = document.getElementById('live-btn');
+    if (btn) btn.click();
+  });
+  await page.evaluate(() => new Promise(r => setTimeout(r, 2200)));
+
+  const liveClickOpacity = await getInlineStyle(page, '.city > .sun', 'opacity');
+  check('Sun fades to 0.1 after Live click (before unmute)', liveClickOpacity === '0.1',
+    `got "${liveClickOpacity}"`);
+
+  const liveClickText = await page.evaluate(() => document.getElementById('play-pause')?.textContent);
+  check('Play button shows ❚❚ after Live click (before unmute)', liveClickText === '❚❚',
+    `got "${liveClickText}"`);
+
   await browser.close();
   server.close();
 

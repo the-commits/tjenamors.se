@@ -82,6 +82,7 @@ export function attemptPlay() {
       unmuted = true;
       audio.muted = false;
       audio.play().catch(() => {});
+      audio.dispatchEvent(new Event('play'));
       document.removeEventListener('click', unmute);
       document.removeEventListener('touchstart', unmute);
     };
