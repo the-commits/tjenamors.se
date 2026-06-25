@@ -117,7 +117,7 @@ export function setupHls() {
       enableWorker: true,
       maxBufferLength: 120,
       maxMaxBufferLength: 300,
-      liveSyncDuration: 90,
+      liveSyncDuration: 60,
       liveDurationInfinity: true,
       backBufferLength: 60,
       manifestLoadingMaxRetry: 6,
@@ -126,16 +126,16 @@ export function setupHls() {
       fragLoadingTimeOut: 60000,
       maxFragLookUpTolerance: 0.25,
       maxStarvationDelay: 30,
-      abrEwmaDefaultEstimate: 50000,
-      abrEwmaFast: 15,
-      abrEwmaSlow: 45,
+      abrEwmaDefaultEstimate: 200000,
+      abrEwmaFast: 5,
+      abrEwmaSlow: 20,
       abrBandWidthFactor: 0.7,
       abrBandWidthUpFactor: 0.6,
     });
     hls.loadSource(HLS_STREAM);
     hls.attachMedia(audio);
     hls.on(Hls.Events.MANIFEST_PARSED, () => {
-      // Force lowest bitrate level — playlist is not sorted by bandwidth
+      // Start at lowest bitrate level — playlist is not sorted by bandwidth. ABR takes over after first segment.
       const levels = hls.levels;
       if (levels && levels.length) {
         let idx = 0;
@@ -146,7 +146,7 @@ export function setupHls() {
             idx = i;
           }
         }
-        hls.currentLevel = idx;
+        hls.startLevel = idx;
       }
       onReady();
     });
