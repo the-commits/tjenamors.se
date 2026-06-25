@@ -4,7 +4,7 @@
 import {
   nowPlayingSong, timeline, nextUp, isOnline, fetchNow,
 } from './api.js';
-import { mode, hls, isAtLive } from './stream.js';
+import { mode, isAtLive } from './stream.js';
 import {
   audio, disc, songText, artistEl, progressFill, timeLabel, liveBtn,
 } from './dom.js';
@@ -75,46 +75,28 @@ export function render() {
   }
 
   // Wall clock of the audio the user hears.
-  // liveSyncPosition is ~HLS_LATENCY seconds behind the live edge;
-  // audio.currentTime is 'behind' seconds behind liveSyncPosition.
-  // Total content age = HLS_LATENCY + behind.
-  // HLS_LATENCY must match liveSyncDuration in stream.js setupHls() config.
-  const HLS_LATENCY = 60;
+  // Content age = seekableEnd - audio.currentTime (buffer ahead of playhead).
+  // seekableEnd is the latest buffered segment, close to the live edge.
+  // No HLS_LATENCY constant — content age is computed directly from the buffer.
   const now = Date.now() / 1000;
-  const behind = mode === 'hls' && hls && hls.liveSyncPosition
-    ? Math.max(0, hls.liveSyncPosition - audio.currentTime)
+  const seekableEnd = audio.seekable.length
+    ? audio.seekable.end(audio.seekable.length - 1)
     : 0;
-  const userWallClock = mode === 'hls' ? now - HLS_LATENCY - behind : now;
+  const contentAge = mode === 'hls' && seekableEnd
+    ? Math.max(0, seekableEnd - audio.currentTime)
+    : 0;
+  const userWallClock = now - contentAge;
 
   if (nowPlayingSong) {
-    const currentStart = nowPlayingSong.played_at;
-    const currentEnd = currentStart + (nowPlayingSong.duration || 0);
-
-    let song;
+    // Always search timeline (includes song_history + now_playing + playing_next)
+    let song = findSongAt(userWallClock);
     let pos;
-
-    if (userWallClock >= currentStart && userWallClock < currentEnd) {
-      // User hears the current song
-      song = nowPlayingSong;
-      pos = Math.max(0, userWallClock - currentStart);
-    } else if (userWallClock < currentStart) {
-      // User hears a previous song — look in history
-      song = findSongAt(userWallClock);
-      if (song) {
-        pos = Math.max(0, userWallClock - song.played_at);
-      } else {
-        song = nowPlayingSong;
-        pos = 0;
-      }
+    if (song) {
+      pos = Math.max(0, userWallClock - song.played_at);
     } else {
-      // Current song has ended — look forward in timeline
-      song = findSongAt(userWallClock);
-      if (song) {
-        pos = Math.max(0, userWallClock - song.played_at);
-      } else {
-        song = nowPlayingSong;
-        pos = nowPlayingSong.duration || 0;
-      }
+      // timeline doesn't cover this time — fall back to nowPlayingSong
+      song = nowPlayingSong;
+      pos = Math.max(0, Math.min(song.duration || 0, userWallClock - song.played_at));
     }
 
     if (song) {
