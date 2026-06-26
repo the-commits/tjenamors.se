@@ -123,9 +123,12 @@ async function run() {
   const liveBtn = await page.$('#live-btn');
   check('Live button exists', !!liveBtn, '#live-btn not found');
 
-  // Check play button initial text (muted autoplay → shows ▶ until user clicks)
-  const playText = await page.evaluate(() => document.getElementById('play-pause')?.textContent);
-  check('Play button shows ▶ on muted autoplay', playText === '▶', `got "${playText}"`);
+  // Check play button initial icon (muted autoplay → shows fa-play until user clicks)
+  const hasPlay = await page.evaluate(() => {
+    const i = document.querySelector('#play-pause i');
+    return i ? i.classList.contains('fa-play') : false;
+  });
+  check('Play button shows fa-play on muted autoplay', hasPlay, 'fa-play not found');
 
   // Check live button initial text
   const liveText = await page.evaluate(() => document.getElementById('live-btn')?.textContent);
@@ -158,9 +161,12 @@ async function run() {
   const unmutedOpacity = await getInlineStyle(page, '.city > .sun', 'opacity');
   check('Sun is at opacity 0.1 after unmute', unmutedOpacity === '0.1', `got "${unmutedOpacity}"`);
 
-  // Button text should be ❚❚ after unmute
-  const afterUnmuteText = await page.evaluate(() => document.getElementById('play-pause')?.textContent);
-  check('Play button shows ❚❚ after unmute', afterUnmuteText === '❚❚', `got "${afterUnmuteText}"`);
+  // Button icon should be fa-pause after unmute
+  const afterUnmutePause = await page.evaluate(() => {
+    const i = document.querySelector('#play-pause i');
+    return i ? i.classList.contains('fa-pause') : false;
+  });
+  check('Play button shows fa-pause after unmute', afterUnmutePause, 'fa-pause not found');
 
   console.log('\n--- Pause audio → sun returns to 1 ---');
 
@@ -175,9 +181,12 @@ async function run() {
   const pausedOpacity = await getInlineStyle(page, '.city > .sun', 'opacity');
   check('Sun opacity is 1 after pause', pausedOpacity === '1', `got "${pausedOpacity}"`);
 
-  // Button text should be ▶ after pause
-  const afterPauseText = await page.evaluate(() => document.getElementById('play-pause')?.textContent);
-  check('Play button shows ▶ after pause', afterPauseText === '▶', `got "${afterPauseText}"`);
+  // Button icon should be fa-play after pause
+  const afterPausePlay = await page.evaluate(() => {
+    const i = document.querySelector('#play-pause i');
+    return i ? i.classList.contains('fa-play') : false;
+  });
+  check('Play button shows fa-play after pause', afterPausePlay, 'fa-play not found');
 
   console.log('\n--- Play audio → sun fades to 0.1 ---');
 
@@ -192,9 +201,12 @@ async function run() {
   const playingOpacity = await getInlineStyle(page, '.city > .sun', 'opacity');
   check('Sun opacity is 0.1 after play', playingOpacity === '0.1', `got "${playingOpacity}"`);
 
-  // Button text should be ❚❚ after play
-  const afterPlayText = await page.evaluate(() => document.getElementById('play-pause')?.textContent);
-  check('Play button shows ❚❚ after play', afterPlayText === '❚❚', `got "${afterPlayText}"`);
+  // Button icon should be fa-pause after play
+  const afterPlayPause = await page.evaluate(() => {
+    const i = document.querySelector('#play-pause i');
+    return i ? i.classList.contains('fa-pause') : false;
+  });
+  check('Play button shows fa-pause after play', afterPlayPause, 'fa-pause not found');
 
   console.log('\n--- Click Live before unmute → sun fades, button changes ---');
 
@@ -210,8 +222,11 @@ async function run() {
   const preLiveOpacity = await getInlineStyle(page, '.city > .sun', 'opacity');
   check('Sun is at opacity 1 before Live click', preLiveOpacity === '1', `got "${preLiveOpacity}"`);
 
-  const preLiveText = await page.evaluate(() => document.getElementById('play-pause')?.textContent);
-  check('Play button shows ▶ before Live click', preLiveText === '▶', `got "${preLiveText}"`);
+  const preLivePlay = await page.evaluate(() => {
+    const i = document.querySelector('#play-pause i');
+    return i ? i.classList.contains('fa-play') : false;
+  });
+  check('Play button shows fa-play before Live click', preLivePlay, 'fa-play not found');
 
   // Click the Live button — should unmute + play + fade sun + show ❚❚
   await page.evaluate(() => {
@@ -224,9 +239,11 @@ async function run() {
   check('Sun fades to 0.1 after Live click (before unmute)', liveClickOpacity === '0.1',
     `got "${liveClickOpacity}"`);
 
-  const liveClickText = await page.evaluate(() => document.getElementById('play-pause')?.textContent);
-  check('Play button shows ❚❚ after Live click (before unmute)', liveClickText === '❚❚',
-    `got "${liveClickText}"`);
+  const liveClickPause = await page.evaluate(() => {
+    const i = document.querySelector('#play-pause i');
+    return i ? i.classList.contains('fa-pause') : false;
+  });
+  check('Play button shows fa-pause after Live click (before unmute)', liveClickPause, 'fa-pause not found');
 
   await browser.close();
   server.close();

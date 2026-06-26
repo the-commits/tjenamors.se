@@ -47,12 +47,12 @@ audio.addEventListener('seeking', () => {
 
 audio.addEventListener('play', () => {
   if (!unmuted) return;
-  playPause.textContent = '❚❚';
+  playPause.innerHTML = '<i class="fa-solid fa-pause"></i>';
   if (sunEl) sunEl.style.opacity = '0.1';
 });
 
 audio.addEventListener('pause', () => {
-  playPause.textContent = '▶';
+  playPause.innerHTML = '<i class="fa-solid fa-play"></i>';
   if (sunEl) sunEl.style.opacity = '1';
   render();
 });
