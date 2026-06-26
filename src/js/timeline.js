@@ -1,10 +1,11 @@
 // Timeline rendering — position calculation, progress bar, song info, art.
 // Depends on api.js for state, stream.js for sync, position.js for cookie.
+// Debug: set window.__DEBUG = true in console to enable render/song-change logging.
 
 import {
   nowPlayingSong, timeline, nextUp, isOnline, fetchNow, elapsedCapturedAt,
 } from './api.js';
-import { mode, isAtLive } from './stream.js';
+import { mode, isAtLive, mediaToWallOffset } from './stream.js';
 import {
   audio, disc, songText, artistEl, progressFill, timeLabel, liveBtn,
 } from './dom.js';
@@ -14,6 +15,7 @@ let currentArt = '';
 let lastSongId = '';
 let localStart = 0;
 let localSongId = '';
+let logTimer = Date.now();
 
 export function fmt(s) {
   s = Math.max(0, s | 0);
@@ -62,28 +64,30 @@ export function render() {
       localSongId = nextUp.id;
       localStart = Date.now() / 1000;
     }
-    setArt(nextUp.art);
-    songText.textContent = nextUp.title || nextUp.text;
-    artistEl.textContent = nextUp.artist || '';
-    const pos = Math.max(0, Date.now() / 1000 - localStart);
-    const dur = nextUp.duration || 0;
-    const pct = dur ? Math.min(100, (pos / dur) * 100) : 0;
-    progressFill.style.width = pct + '%';
-    timeLabel.textContent = dur ? fmt(pos) + ' / ' + fmt(dur) : '';
-    liveBtn.classList.toggle('live', isAtLive());
+    // After 30s of showing stale nextUp, fall back to "Ingen sändning"
+    // instead of showing a song the user almost certainly isn't hearing.
+    if (Date.now() / 1000 - localStart < 30) {
+      setArt(nextUp.art);
+      songText.textContent = nextUp.title || nextUp.text;
+      artistEl.textContent = nextUp.artist || '';
+      const pos = Math.max(0, Date.now() / 1000 - localStart);
+      const dur = nextUp.duration || 0;
+      const pct = dur ? Math.min(100, (pos / dur) * 100) : 0;
+      progressFill.style.width = pct + '%';
+      timeLabel.textContent = dur ? fmt(pos) + ' / ' + fmt(dur) : '';
+      liveBtn.classList.toggle('live', isAtLive());
+    } else {
+      setArt(null);
+      songText.textContent = 'Ingen sändning';
+      artistEl.textContent = '';
+      progressFill.style.width = '0%';
+      timeLabel.textContent = '';
+      liveBtn.classList.remove('live');
+    }
     return;
   }
 
   // Wall clock of the audio the user hears.
-  // The API gives us the real broadcast wall clock (played_at + elapsed).
-  // The user is contentAge seconds behind the HLS live edge (buffer ahead
-  // of playhead). In a real-time live stream, media seconds ≈ wall clock
-  // seconds, so contentAge approximates the user's wall-clock lag.
-  //
-  // This avoids relying on HLS segment filename timestamps or client-server
-  // clock alignment. The result may be up to ~20s ahead of the user's actual
-  // position (due to HLS encoding latency unaccounted for), but is far more
-  // accurate than the old Date.now()-based approach which could be >60s off.
   const seekableEnd = audio.seekable.length
     ? audio.seekable.end(audio.seekable.length - 1)
     : 0;
@@ -93,6 +97,25 @@ export function render() {
   const userWallClock = mode === 'hls' && seekableEnd && nowPlayingSong
     ? (nowPlayingSong.played_at + nowPlayingSong.elapsed) - contentAge
     : Date.now() / 1000;
+
+  // Debug: set window.__DEBUG = true in console
+  const now = Date.now();
+  if (window.__DEBUG && now - logTimer >= 2000) {
+    logTimer = now;
+    console.log('[RENDER]', JSON.stringify({
+      audioCT: audio.currentTime.toFixed(1),
+      seekEnd: seekableEnd ? seekableEnd.toFixed(1) : null,
+      contentAge: contentAge.toFixed(1),
+      wallClock: Math.round(userWallClock),
+      npSong: nowPlayingSong ? nowPlayingSong.title : null,
+      npElapsed: nowPlayingSong?.elapsed,
+      npPlayedAt: nowPlayingSong?.played_at,
+      offset: mediaToWallOffset.toFixed(1),
+      timelineLen: timeline.length,
+      isOnline,
+      liveClass: liveBtn.classList.contains('live'),
+    }));
+  }
 
   if (nowPlayingSong) {
     // Always search timeline (includes song_history + now_playing + playing_next)
@@ -107,8 +130,25 @@ export function render() {
     }
 
     if (song) {
+      const songChanged = song.id && song.id !== lastSongId;
       if (song.id && song.id !== lastSongId) {
         lastSongId = song.id;
+      }
+      // Log when the displayed song changes (debug only)
+      if (window.__DEBUG && songChanged) {
+        console.log('[SONG]', JSON.stringify({
+          type: song === nowPlayingSong ? 'np_fallback' :
+                song === nextUp ? 'next' : 'timeline',
+          title: song.title,
+          artist: song.artist,
+          playedAt: song.played_at,
+          duration: song.duration,
+          pos: pos.toFixed(1),
+          npTitle: nowPlayingSong?.title,
+          npElapsed: nowPlayingSong?.elapsed,
+          wallClock: Math.round(userWallClock),
+          artBg: disc ? getComputedStyle(disc).backgroundImage.substring(0, 60) : null,
+        }));
       }
       setArt(song.art);
       songText.textContent = song.title || song.text;

@@ -1,5 +1,6 @@
 // HLS/MP3 streaming — mode switching, live sync, error recovery.
 // No direct UI manipulation (only audio element); no dependency on timeline.
+// Debug: set window.__DEBUG = true in console to enable segment/render logging.
 
 import { HLS_STREAM, MP3_STREAM } from './api.js';
 import { audio, playPause } from './dom.js';
@@ -156,6 +157,16 @@ export function setupHls() {
         mediaToWallOffset = (wc - data.frag.duration) - data.frag.start;
         window.__mediaToWallOffset = mediaToWallOffset;
       }
+      if (window.__DEBUG) console.log('[SEGMENT]', JSON.stringify({
+        frag: data.frag?.sn || '?',
+        start: data.frag?.start?.toFixed(1),
+        dur: data.frag?.duration,
+        urlWc: wc,
+        offset: mediaToWallOffset.toFixed(1),
+        audioCT: audio.currentTime.toFixed(1),
+        seekEnd: audio.seekable.length ? audio.seekable.end(audio.seekable.length - 1).toFixed(1) : null,
+        liveSync: hls?.liveSyncPosition?.toFixed(1),
+      }));
     });
     hls.on(Hls.Events.MANIFEST_PARSED, () => {
       // Start at lowest bitrate level — playlist is not sorted by bandwidth. ABR takes over after first segment.
