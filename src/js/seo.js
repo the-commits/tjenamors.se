@@ -53,7 +53,8 @@ function updateSchema() {
     if (ogTitle) ogTitle.setAttribute('content', 'TjenaMors.se — ' + songLabel);
     if (ogDesc) {
       ogDesc.setAttribute('content',
-        'Nu spelas: ' + songLabel + '. Rebelradio för punk, ska, rock och metal.');
+        'Nu spelas: ' + songLabel +
+        '. Rebelradio — från ölstinkande punk till norsk getblodsdyrkande hobbit metal, varvat med ska.');
     }
     if (twitterTitle) twitterTitle.setAttribute('content', 'TjenaMors.se — ' + songLabel);
     if (twitterDesc) twitterDesc.setAttribute('content', 'Nu spelas: ' + songLabel);
