@@ -1,41 +1,40 @@
 # tjenamors.se
 
-Synthwave-radiostation byggd med **Tailwind CSS** (typ. vi kör `mt-[2.5em]` överallt och låtsas att det funkar).
+Synthwave-radiostation. Den funkar. Oftast.
 
 ## Kom igång
 
 ```bash
 npm install
-node scripts/build.mjs     # trollar om src/ → dist/
+node scripts/build.mjs     # src/ → dist/
 ```
 
-Ut kommer `dist/`. Cloudflare Pages deployar automatiskt från `main`, för att 2026 ska vara framtiden.
+`dist/` kommer ut om du har tur. Cloudflare Pages deployar från `main`.
+Det är i alla fall planen.
 
 ## Testa
 
 ```bash
-# Flummiga individuella sviter
+# Om du orkar
 node tests/mobile-centering.mjs
 node tests/sun-fade.mjs
 node tests/player-spacing.mjs
 
-# Kör allt (pre-push, typ 10 min av ditt liv)
+# Hela skiten (pre-push)
 npm run lint && npm run lint:lines && node scripts/build.mjs \
   && node tests/mobile-centering.mjs && node tests/sun-fade.mjs \
   && node tests/abr-speeds.mjs
 
-# Testa mot prod (om du vågar)
+# Testa mot prod (varför inte)
 TEST_URL=https://tjenamors.se node tests/player-spacing.mjs
 ```
 
 ## Deploya
 
-Pusha till `main` — Cloudflare Pages får ett nervöst sammanbrott
-och deployar `dist/`. Pre-push-hooken kör lint + build + E2E
-(så man hinner ångra sig). Skippa med `SKIP_E2E=1 git push`
-om du lever farligt.
+Pusha till `main` så deployar Cloudflare Pages. Pre-push-hooken kör
+lint + build + E2E. Använd `SKIP_E2E=1 git push` om du inte bryr dig.
 
 ---
 
-**Lyssna på [tjenamors.se](https://tjenamors.se)** — retrobeats,
-solnedgångar och ett grid som glider ut i tomheten. Inga frågor.
+**Lyssna på [tjenamors.se](https://tjenamors.se)** — det är ändå
+nåt att göra.
