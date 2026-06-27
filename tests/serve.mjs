@@ -21,7 +21,8 @@ const MIME = {
 export async function serve(port = 0) {
   return new Promise((resolve) => {
     const server = createServer((req, res) => {
-      let path = req.url === '/' ? '/index.html' : req.url.split('?')[0];
+      let path = req.url.split('?')[0];
+      if (path === '/') path = '/index.html';
       const filePath = join(root, path);
       if (!existsSync(filePath) || statSync(filePath).isDirectory()) {
         res.writeHead(404);

@@ -31,3 +31,56 @@
     opacity: 0.35;
   }
 }
+
+@keyframes surfTipIn {
+  0% {
+    transform: translateX(80vw) scale(0.2) rotate(-20deg);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  60% {
+    transform: translateX(-8vw) scale(1.25) rotate(6deg);
+  }
+  75% {
+    transform: translateX(4vw) scale(0.88) rotate(-3deg);
+  }
+  88% {
+    transform: translateX(-2vw) scale(1.05) rotate(1.5deg);
+  }
+  96% {
+    transform: translateX(0.8vw) scale(0.98) rotate(-0.5deg);
+  }
+  100% {
+    transform: translateX(0) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes surfTipOut {
+  0% {
+    transform: translateX(0) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  15% {
+    transform: translateX(6vw) scale(1.1) rotate(-4deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-100vw) scale(0.15) rotate(18deg);
+    opacity: 0;
+  }
+}
+
+@keyframes surfTipBob {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  25% {
+    transform: translateY(-3px);
+  }
+  75% {
+    transform: translateY(3px);
+  }
+}

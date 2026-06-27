@@ -14,3 +14,6 @@ export const sunEl = document.querySelector('.city > .sun');
 export const playerEl = document.querySelector('.player');
 export const gridEl = document.querySelector('.synth-grid');
 export const gridContainer = document.querySelector('.grid-container');
+export const surfTipEl = document.getElementById('surf-tip');
+export const surfTipLink = document.getElementById('surf-tip-link');
+export const surfTipText = document.getElementById('surf-tip-text');

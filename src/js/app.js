@@ -4,6 +4,7 @@
 //   dom.js ← position.js ← stream.js ← timeline.js ← player.js ← app.js
 //   api.js  ← stream.js ← timeline.js ← player.js ← app.js
 //   api.js  ← (standalone) ─────────────────────────────────── app.js
+//   dom.js ← surf-tips.js ← app.js
 
 import { pollNowPlaying } from './api.js';
 import { tickLiveWall, setupHls } from './stream.js';
@@ -11,6 +12,7 @@ import { render } from './timeline.js';
 import { revealPlayer } from './player.js';
 import { gridEl, gridContainer } from './dom.js';
 import { savePosition, savePositionBeforeUnload } from './position.js';
+import { startSurfTips } from './surf-tips.js';
 
 // --- Grid animation stop ---
 
@@ -43,3 +45,4 @@ pollNowPlaying();
 setInterval(pollNowPlaying, 2000);
 setupHls();
 render();
+startSurfTips();
