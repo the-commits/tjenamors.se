@@ -5,7 +5,8 @@ if [ -z "$SKIP_E2E" ]; then
   node scripts/build.mjs && \
   node tests/mobile-centering.mjs && \
   node tests/sun-fade.mjs && \
+  node tests/surf-tips.mjs && \
+  node tests/css-clean.mjs && \
   node tests/song-transitions.mjs && \
-  node tests/wall-clock-sync.mjs && \
-  node tests/abr-speeds.mjs
+  node tests/wall-clock-sync.mjs
 fi

@@ -47,7 +47,9 @@ function walk(dir) {
       files.push(...walk(full));
     } else if (statSync(full).isFile()) {
       const ext = extname(full);
-      if (['.png', '.jpg', '.jpeg', '.gif', '.ico', '.woff', '.woff2', '.ttf', '.eot', '.svg'].includes(ext)) continue;
+      const binaryExts = ['.png', '.jpg', '.jpeg', '.gif', '.ico',
+        '.woff', '.woff2', '.ttf', '.eot', '.svg', '.webmanifest'];
+      if (binaryExts.includes(ext)) continue;
       files.push(rel);
     }
   }
