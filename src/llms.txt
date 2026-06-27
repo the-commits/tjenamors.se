@@ -20,7 +20,8 @@ för mobil och desktop.
 
 ## Teknik
 
-- Vanilla HTML/CSS/JS, inget ramverk
+- Tailwind CSS utility classes (pre-built, ingen JIT/PostCSS)
+- Övrig CSS för hand (animations, grid, player, surf-tips)
 - HLS.js för adaptiv strömning, MP3 som fallback
 - PWA med service worker för offline-shell
 - Google Cast SDK för Chromecast
