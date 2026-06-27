@@ -53,7 +53,7 @@ function updateSchema() {
     if (ogTitle) ogTitle.setAttribute('content', 'TjenaMors.se — ' + songLabel);
     if (ogDesc) {
       ogDesc.setAttribute('content',
-        'Nu spelas: ' + songLabel + '. Sveriges mest respektlösa webradio för punk, ska, rock och metal.');
+        'Nu spelas: ' + songLabel + '. Rebelradio för punk, ska, rock och metal.');
     }
     if (twitterTitle) twitterTitle.setAttribute('content', 'TjenaMors.se — ' + songLabel);
     if (twitterDesc) twitterDesc.setAttribute('content', 'Nu spelas: ' + songLabel);
