@@ -40,9 +40,9 @@ async function getSong() {
   return page.evaluate(() => ({
     title: document.querySelector('#song-text')?.textContent || '',
     artist: document.querySelector('#artist')?.textContent || '',
-    time: document.querySelector('#time-label')?.textContent || '',
+    time: document.querySelector('#time')?.textContent || '',
     art: document.querySelector('#disc')?.style?.backgroundImage?.slice(0, 160) || '',
-    playBtn: document.querySelector('#play-pause')?.textContent || '',
+    playBtn: document.querySelector('#play-pause')?.innerHTML || '',
     liveBtn: document.querySelector('#live-btn')?.textContent || '',
   })).catch(() => null);
 }
@@ -75,11 +75,15 @@ check('Song #1 has title', !!song1?.title, 'no title text');
 check('Song #1 has artist', !!song1?.artist, 'no artist text');
 check('Song #1 time is non-empty', song1?.time?.length > 0, `got "${song1?.time}"`);
 check('Song #1 has cover art', song1?.art?.includes('url('), 'no background-image');
-check('Play button exists', song1?.playBtn === '▶' || song1?.playBtn === '❚❚', `got "${song1?.playBtn}"`);
+check(
+  'Play button exists',
+  (song1?.playBtn?.includes('fa-play') || song1?.playBtn?.includes('fa-pause')),
+  `got "${song1?.playBtn}"`,
+);
 check('Live button shows LIVE', song1?.liveBtn?.includes('LIVE'), `got "${song1?.liveBtn}"`);
 
 // Click play if paused to start streaming
-if (song1?.playBtn === '▶') {
+if (song1?.playBtn?.includes('fa-play')) {
   await page.evaluate(() => {
     const a = document.querySelector('audio');
     if (a) {
