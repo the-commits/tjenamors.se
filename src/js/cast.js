@@ -35,8 +35,14 @@ function createCastButton() {
   castBtn.title = 'Spela på Chromecast';
   castBtn.style.display = 'none'; // hidden until SDK available
 
-  // Insert after volume icon (same .volume-control div)
-  volumeIcon.parentNode.insertBefore(castBtn, volumeIcon.nextSibling);
+  // Insert into .controls, after share button
+  const controls = document.querySelector('.controls');
+  const shareBtn = document.getElementById('share-btn');
+  if (shareBtn && controls) {
+    controls.insertBefore(castBtn, shareBtn.nextSibling);
+  } else if (controls) {
+    controls.appendChild(castBtn);
+  }
 
   castBtn.addEventListener('click', onCastButtonClick);
   castBtn.addEventListener('keydown', (e) => {

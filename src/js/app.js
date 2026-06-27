@@ -8,6 +8,7 @@
 //   api.js ← seo.js ← app.js
 //   api.js ← media-session.js ← app.js
 //   dom.js ← cast.js ← app.js
+//   api.js ← share.js ← app.js
 
 import { pollNowPlaying } from './api.js';
 import { tickLiveWall, setupHls } from './stream.js';
@@ -20,6 +21,7 @@ import { initVolume } from './volume.js';
 import { initSeo } from './seo.js';
 import { initMediaSession } from './media-session.js';
 import { initCast } from './cast.js';
+import { initShare } from './share.js';
 
 // --- Grid animation stop ---
 
@@ -57,6 +59,7 @@ initVolume();
 initSeo();
 initMediaSession();
 initCast();
+initShare();
 
 // --- Cookie notice dismiss + surf tip reposition ---
 

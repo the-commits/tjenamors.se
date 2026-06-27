@@ -158,7 +158,25 @@
   box-shadow: 0 0 14px rgba(54, 226, 248, 0.5), 0 0 6px rgba(255, 46, 151, 0.4);
 }
 
-/* Cast button — sits between volume icon and slider */
+/* Share button — in .controls, after LIVE button */
+#share-btn {
+  font-size: 1.2em;
+  width: 1.4em;
+  text-align: center;
+  color: #ffe6fb;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s ease, color 0.2s ease, text-shadow 0.2s ease;
+  text-shadow: 0 0 6px rgba(54, 226, 248, 0.3);
+}
+
+#share-btn:hover {
+  opacity: 1;
+  color: #36e2f8;
+  text-shadow: 0 0 12px rgba(54, 226, 248, 0.7);
+}
+
+/* Cast button — in .controls, after share button */
 #cast-btn {
   font-size: 1.3em;
   width: 1.4em;
@@ -168,7 +186,6 @@
   opacity: 0.6;
   transition: opacity 0.2s ease, color 0.2s ease, text-shadow 0.2s ease;
   text-shadow: 0 0 6px rgba(54, 226, 248, 0.3);
-  order: -1; /* before volume icon */
 }
 
 #cast-btn:hover {

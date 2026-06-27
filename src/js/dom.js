@@ -20,3 +20,4 @@ export const surfTipText = document.getElementById('surf-tip-text');
 export const volumeSlider = document.getElementById('volume-slider');
 export const volumeIcon = document.getElementById('volume-icon');
 export const castBtn = document.getElementById('cast-btn');
+export const shareBtn = document.getElementById('share-btn');
